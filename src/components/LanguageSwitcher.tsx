@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Language } from "lucide-react";
+import { Languages } from "lucide-react";
 
 const LanguageSwitcher = () => {
   const { language, setLanguage, t } = useTranslation();
@@ -18,7 +18,7 @@ const LanguageSwitcher = () => {
       title={t('general.language')}
       className="rounded-full"
     >
-      <Language className="h-5 w-5" />
+      <Languages className="h-5 w-5" />
       <span className="ml-2 text-xs font-semibold">{language === 'fr' ? 'FR' : 'عر'}</span>
     </Button>
   );
