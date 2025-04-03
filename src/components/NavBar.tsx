@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Menu, X, Home, Calendar, User, ShoppingCart } from "lucide-react";
+import { Menu, X, Home, Calendar, User, ShoppingCart, Heart, Phone, Video } from "lucide-react";
 
 const NavBar = () => {
   const { t, isRTL } = useTranslation();
@@ -18,9 +18,12 @@ const NavBar = () => {
   const navItems = [
     { label: t('nav.home'), path: "/", icon: Home },
     { label: t('nav.appointments'), path: "/appointments", icon: Calendar },
-    { label: t('nav.services'), path: "/services", icon: User },
-    { label: t('nav.shop'), path: "/shop", icon: ShoppingCart },
+    { label: t('nav.services'), path: "/services", icon: Heart },
     { label: t('nav.doctors'), path: "/doctors", icon: User },
+    { label: t('nav.shop'), path: "/shop", icon: ShoppingCart },
+    { label: t('nav.pharmacy'), path: "/pharmacy", icon: Heart },
+    { label: t('nav.homecare'), path: "/homecare", icon: Home },
+    { label: t('nav.teleconsultation'), path: "/teleconsultation", icon: Video },
   ];
 
   return (
@@ -56,6 +59,11 @@ const NavBar = () => {
           </Button>
           <Button className="bg-medical-blue hover:bg-medical-blue/90" size="sm" asChild>
             <Link to="/signup">{t('auth.signup')}</Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/profile">
+              <User className="h-4 w-4" />
+            </Link>
           </Button>
 
           {/* Mobile Menu Button */}
