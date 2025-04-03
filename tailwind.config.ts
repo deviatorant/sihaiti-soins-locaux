@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				medical: {
+					blue: '#1E88E5',
+					green: '#4CAF50',
+					red: '#E53935',
+					light: '#F5F5F5'
 				}
 			},
 			borderRadius: {
@@ -84,11 +91,16 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-gentle': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.8' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-gentle': 'pulse-gentle 2s infinite'
 			}
 		}
 	},
