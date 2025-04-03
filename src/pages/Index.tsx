@@ -7,46 +7,150 @@ import ServiceCard from "@/components/ServiceCard";
 import LocationMap from "@/components/LocationMap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar, Search, User, Ambulance, Home as HomeIcon, Calendar as CalendarIcon } from "lucide-react";
+import { 
+  Video, 
+  Calendar, 
+  Search, 
+  User, 
+  Ambulance, 
+  Home as HomeIcon, 
+  Stethoscope, 
+  Activity,
+  HeartPulse,
+  Clock,
+  Pill
+} from "lucide-react";
 
 const Index = () => {
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Données de services (à déplacer vers un fichier de données plus tard)
-  const services = [
+  // Services data organized by category
+  const serviceCategoriesData = [
     {
-      id: 1,
-      title: t('services.homecare'),
-      description: "Des soins médicaux professionnels dans le confort de votre domicile.",
-      icon: HomeIcon,
-      path: "/services/homecare",
-      isEmergency: false
+      id: "appointments",
+      title: t('home.appointments'),
+      services: [
+        {
+          id: 1,
+          title: t('services.appointment'),
+          description: t('services.appointmentDesc'),
+          icon: Calendar,
+          path: "/appointments",
+          isHomecare: false,
+          isTeleconsultation: false,
+          isEmergency: false
+        },
+        {
+          id: 2,
+          title: t('services.teleconsultation'),
+          description: t('services.teleconsultationDesc'),
+          icon: Video,
+          path: "/services/teleconsultation",
+          isHomecare: false,
+          isTeleconsultation: true,
+          isEmergency: false
+        }
+      ]
     },
     {
-      id: 2,
-      title: t('services.physiotherapy'),
-      description: "Séances de kinésithérapie à domicile par des professionnels certifiés.",
-      icon: User,
-      path: "/services/physiotherapy",
-      isEmergency: false
+      id: "homecare",
+      title: t('home.homecare'),
+      services: [
+        {
+          id: 3,
+          title: t('services.homecare'),
+          description: t('services.homecareDesc'),
+          icon: HomeIcon,
+          path: "/services/homecare",
+          isHomecare: true,
+          isTeleconsultation: false,
+          isEmergency: false
+        },
+        {
+          id: 4,
+          title: t('services.physiotherapy'),
+          description: t('services.physiotherapyDesc'),
+          icon: Activity,
+          path: "/services/physiotherapy",
+          isHomecare: true,
+          isTeleconsultation: false,
+          isEmergency: false
+        },
+        {
+          id: 5,
+          title: t('services.bloodTest'),
+          description: t('services.bloodTestDesc'),
+          icon: HeartPulse,
+          path: "/services/bloodtest",
+          isHomecare: true,
+          isTeleconsultation: false,
+          isEmergency: false
+        },
+        {
+          id: 6,
+          title: t('services.nursing'),
+          description: t('services.nursingDesc'),
+          icon: Stethoscope,
+          path: "/services/nursing",
+          isHomecare: true,
+          isTeleconsultation: false,
+          isEmergency: false
+        }
+      ]
     },
     {
-      id: 3,
-      title: t('services.emergency'),
-      description: "Intervention médicale rapide à votre domicile en cas d'urgence.",
-      icon: User,
-      path: "/services/emergency",
-      isEmergency: true
+      id: "emergency",
+      title: t('home.emergency'),
+      services: [
+        {
+          id: 7,
+          title: t('services.emergency'),
+          description: t('services.emergencyDesc'),
+          icon: Clock,
+          path: "/services/emergency",
+          isHomecare: false,
+          isTeleconsultation: false,
+          isEmergency: true
+        },
+        {
+          id: 8,
+          title: t('services.ambulance'),
+          description: t('services.ambulanceDesc'),
+          icon: Ambulance,
+          path: "/services/ambulance",
+          isHomecare: false,
+          isTeleconsultation: false,
+          isEmergency: true
+        }
+      ]
     },
     {
-      id: 4,
-      title: t('services.ambulance'),
-      description: "Service d'ambulance rapide avec suivi en temps réel.",
-      icon: Ambulance,
-      path: "/services/ambulance",
-      isEmergency: true
+      id: "more",
+      title: t('home.moreServices'),
+      services: [
+        {
+          id: 9,
+          title: t('services.doctors'),
+          description: t('services.doctorsDesc'),
+          icon: User,
+          path: "/doctors",
+          isHomecare: false,
+          isTeleconsultation: false,
+          isEmergency: false
+        },
+        {
+          id: 10,
+          title: t('services.pharmacy'),
+          description: t('services.pharmacyDesc'),
+          icon: Pill,
+          path: "/shop/pharmacy",
+          isHomecare: false,
+          isTeleconsultation: false,
+          isEmergency: false
+        }
+      ]
     }
   ];
 
@@ -57,7 +161,7 @@ const Index = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Searching for:", searchQuery);
-    // À implémenter: logique de recherche
+    // To implement: search logic
   };
 
   return (
@@ -91,25 +195,29 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Services Section */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-8 text-center">{t('home.findServices')}</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.map((service) => (
-              <ServiceCard
-                key={service.id}
-                title={service.title}
-                description={service.description}
-                icon={service.icon}
-                isEmergency={service.isEmergency}
-                onClick={() => handleServiceClick(service.path)}
-              />
-            ))}
+      {/* Services Sections - Organized by category */}
+      {serviceCategoriesData.map((category) => (
+        <section key={category.id} className="py-8 first:pt-12">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-6 text-center">{category.title}</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {category.services.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  title={service.title}
+                  description={service.description}
+                  icon={service.icon}
+                  isEmergency={service.isEmergency}
+                  isTeleconsultation={service.isTeleconsultation}
+                  isHomecare={service.isHomecare}
+                  onClick={() => handleServiceClick(service.path)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ))}
       
       {/* Map Section */}
       <section className="py-8 bg-white">
@@ -122,28 +230,29 @@ const Index = () => {
       {/* Quick Access Section */}
       <section className="py-12 bg-medical-light">
         <div className="container mx-auto px-4">
+          <h2 className="text-2xl font-bold mb-6 text-center">{t('home.quickAccess')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="appointment-card flex items-center p-6">
-              <CalendarIcon className="h-8 w-8 text-medical-blue mr-4" />
+            <div className="appointment-card flex items-center p-6 bg-white rounded-lg shadow-sm">
+              <Calendar className="h-8 w-8 text-medical-blue mr-4" />
               <div>
                 <h3 className="text-lg font-semibold">{t('appointments.book')}</h3>
-                <p className="text-sm text-gray-600">Planifiez votre prochain rendez-vous</p>
+                <p className="text-sm text-gray-600">{t('appointments.bookDesc')}</p>
               </div>
             </div>
             
-            <div className="appointment-card flex items-center p-6">
+            <div className="appointment-card flex items-center p-6 bg-white rounded-lg shadow-sm">
               <Search className="h-8 w-8 text-medical-blue mr-4" />
               <div>
                 <h3 className="text-lg font-semibold">{t('doctors.directory')}</h3>
-                <p className="text-sm text-gray-600">Trouvez le bon spécialiste</p>
+                <p className="text-sm text-gray-600">{t('doctors.directoryDesc')}</p>
               </div>
             </div>
             
-            <div className="appointment-card flex items-center p-6">
+            <div className="appointment-card flex items-center p-6 bg-white rounded-lg shadow-sm">
               <User className="h-8 w-8 text-medical-blue mr-4" />
               <div>
                 <h3 className="text-lg font-semibold">{t('shop.products')}</h3>
-                <p className="text-sm text-gray-600">Parcourez notre boutique médicale</p>
+                <p className="text-sm text-gray-600">{t('shop.productsDesc')}</p>
               </div>
             </div>
           </div>

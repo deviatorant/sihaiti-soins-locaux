@@ -8,6 +8,8 @@ interface ServiceCardProps {
   description: string;
   icon: LucideIcon;
   isEmergency?: boolean;
+  isTeleconsultation?: boolean;
+  isHomecare?: boolean;
   onClick?: () => void;
 }
 
@@ -16,6 +18,8 @@ const ServiceCard = ({
   description,
   icon: Icon,
   isEmergency = false,
+  isTeleconsultation = false,
+  isHomecare = false,
   onClick
 }: ServiceCardProps) => {
   const { isRTL } = useTranslation();
@@ -23,13 +27,22 @@ const ServiceCard = ({
   return (
     <div 
       className={cn(
-        "service-card cursor-pointer",
-        isEmergency && "emergency-service",
+        "service-card cursor-pointer p-6 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-105",
+        isEmergency && "emergency-service bg-red-50 border-l-4 border-medical-red",
+        isTeleconsultation && "teleconsultation-service bg-blue-50 border-l-4 border-medical-blue", 
+        isHomecare && "homecare-service bg-green-50 border-l-4 border-medical-green",
+        !isEmergency && !isTeleconsultation && !isHomecare && "bg-white border border-gray-200",
         isRTL ? "text-right" : "text-left"
       )}
       onClick={onClick}
     >
-      <div className="service-icon inline-flex">
+      <div className={cn(
+        "service-icon inline-flex items-center justify-center w-12 h-12 rounded-full mb-4",
+        isEmergency && "bg-red-100 text-medical-red",
+        isTeleconsultation && "bg-blue-100 text-medical-blue",
+        isHomecare && "bg-green-100 text-medical-green",
+        !isEmergency && !isTeleconsultation && !isHomecare && "bg-gray-100 text-gray-600"
+      )}>
         <Icon className="h-6 w-6" />
       </div>
       <h3 className="text-lg font-semibold mb-2">{title}</h3>

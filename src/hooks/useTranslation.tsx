@@ -87,23 +87,107 @@ const translations: Translations = {
     fr: 'Trouvez les services dont vous avez besoin',
     ar: 'ابحث عن الخدمات التي تحتاجها'
   },
+  'home.appointments': {
+    fr: 'Rendez-vous et téléconsultations',
+    ar: 'المواعيد والاستشارات عن بعد'
+  },
+  'home.homecare': {
+    fr: 'Soins à domicile',
+    ar: 'الرعاية المنزلية'
+  },
+  'home.emergency': {
+    fr: 'Services d\'urgence',
+    ar: 'خدمات الطوارئ'
+  },
+  'home.moreServices': {
+    fr: 'Autres services',
+    ar: 'خدمات أخرى'
+  },
+  'home.quickAccess': {
+    fr: 'Accès rapide',
+    ar: 'وصول سريع'
+  },
   
   // Services
   'services.homecare': {
     fr: 'Soins à domicile',
     ar: 'الرعاية المنزلية'
   },
+  'services.homecareDesc': {
+    fr: 'Des soins médicaux professionnels dans le confort de votre domicile.',
+    ar: 'رعاية طبية احترافية في راحة منزلك.'
+  },
   'services.physiotherapy': {
     fr: 'Kinésithérapie',
     ar: 'العلاج الطبيعي'
+  },
+  'services.physiotherapyDesc': {
+    fr: 'Séances de kinésithérapie à domicile par des professionnels certifiés.',
+    ar: 'جلسات العلاج الطبيعي في المنزل من قبل متخصصين معتمدين.'
   },
   'services.emergency': {
     fr: 'Urgences à domicile',
     ar: 'الطوارئ المنزلية'
   },
+  'services.emergencyDesc': {
+    fr: 'Intervention médicale rapide à votre domicile en cas d\'urgence.',
+    ar: 'تدخل طبي سريع في منزلك في حالات الطوارئ.'
+  },
   'services.ambulance': {
     fr: 'Ambulance',
     ar: 'سيارة إسعاف'
+  },
+  'services.ambulanceDesc': {
+    fr: 'Service d\'ambulance rapide avec suivi en temps réel.',
+    ar: 'خدمة إسعاف سريعة مع تتبع في الوقت الحقيقي.'
+  },
+  'services.appointment': {
+    fr: 'Prendre rendez-vous',
+    ar: 'حجز موعد'
+  },
+  'services.appointmentDesc': {
+    fr: 'Planifiez vos rendez-vous avec nos professionnels de santé.',
+    ar: 'جدولة مواعيدك مع متخصصينا الصحيين.'
+  },
+  'services.teleconsultation': {
+    fr: 'Téléconsultation',
+    ar: 'الاستشارة عن بعد'
+  },
+  'services.teleconsultationDesc': {
+    fr: 'Consultez un médecin par vidéo sans vous déplacer.',
+    ar: 'استشر طبيبًا عبر الفيديو دون الحاجة للتنقل.'
+  },
+  'services.bloodTest': {
+    fr: 'Prises de sang',
+    ar: 'تحاليل الدم'
+  },
+  'services.bloodTestDesc': {
+    fr: 'Service de prélèvement sanguin à domicile par des infirmiers qualifiés.',
+    ar: 'خدمة سحب الدم في المنزل من قبل ممرضين مؤهلين.'
+  },
+  'services.nursing': {
+    fr: 'Soins infirmiers',
+    ar: 'الرعاية التمريضية'
+  },
+  'services.nursingDesc': {
+    fr: 'Services infirmiers à domicile pour tous types de soins.',
+    ar: 'خدمات التمريض في المنزل لجميع أنواع الرعاية.'
+  },
+  'services.doctors': {
+    fr: 'Annuaire des médecins',
+    ar: 'دليل الأطباء'
+  },
+  'services.doctorsDesc': {
+    fr: 'Trouvez le bon spécialiste pour votre besoin.',
+    ar: 'اعثر على المتخصص المناسب لاحتياجاتك.'
+  },
+  'services.pharmacy': {
+    fr: 'Pharmacie en ligne',
+    ar: 'صيدلية عبر الإنترنت'
+  },
+  'services.pharmacyDesc': {
+    fr: 'Commandez vos médicaments et produits de santé en ligne.',
+    ar: 'اطلب أدويتك ومنتجات الصحة عبر الإنترنت.'
   },
   'services.nearbyProfessionals': {
     fr: 'Professionnels à proximité',
@@ -114,6 +198,10 @@ const translations: Translations = {
   'appointments.book': {
     fr: 'Prendre rendez-vous',
     ar: 'حجز موعد'
+  },
+  'appointments.bookDesc': {
+    fr: 'Planifiez votre prochain rendez-vous',
+    ar: 'جدولة موعدك القادم'
   },
   'appointments.upcoming': {
     fr: 'Rendez-vous à venir',
@@ -141,6 +229,10 @@ const translations: Translations = {
     fr: 'Produits médicaux',
     ar: 'المنتجات الطبية'
   },
+  'shop.productsDesc': {
+    fr: 'Parcourez notre boutique médicale',
+    ar: 'تصفح متجرنا الطبي'
+  },
   'shop.services': {
     fr: 'Services premium',
     ar: 'الخدمات المميزة'
@@ -158,6 +250,10 @@ const translations: Translations = {
   'doctors.directory': {
     fr: 'Annuaire des médecins',
     ar: 'دليل الأطباء'
+  },
+  'doctors.directoryDesc': {
+    fr: 'Trouvez le bon spécialiste',
+    ar: 'اعثر على المتخصص المناسب'
   },
   'doctors.specialty': {
     fr: 'Spécialité',
