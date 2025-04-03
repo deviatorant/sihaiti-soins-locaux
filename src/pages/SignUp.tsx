@@ -1,27 +1,37 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ArrowLeft } from "lucide-react";
 
 const SignUp = () => {
   const { t, isRTL } = useTranslation();
+  const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sign up with phone:", phoneNumber, "name:", name);
+    console.log("Sign up with phone:", phoneNumber, "firstName:", firstName, "lastName:", lastName);
     // À implémenter: logique d'inscription
+    navigate("/services");
   };
 
   const handleGoogleSignUp = () => {
     console.log("Sign up with Google");
     // À implémenter: logique d'inscription Google
+    navigate("/services");
+  };
+
+  const handleContinueAsGuest = () => {
+    console.log("Continue as guest");
+    navigate("/services");
   };
 
   return (
@@ -38,14 +48,27 @@ const SignUp = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">{t('auth.name')}</Label>
+              <Label htmlFor="firstName">{t('auth.firstName')}</Label>
               <Input
-                id="name"
+                id="firstName"
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 className="bg-white"
                 dir={isRTL ? 'rtl' : 'ltr'}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">{t('auth.lastName')}</Label>
+              <Input
+                id="lastName"
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="bg-white"
+                dir={isRTL ? 'rtl' : 'ltr'}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -58,6 +81,7 @@ const SignUp = () => {
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 className="bg-white"
                 dir={isRTL ? 'rtl' : 'ltr'}
+                required
               />
             </div>
             <Button type="submit" className="w-full bg-medical-blue hover:bg-medical-blue/90">
@@ -73,7 +97,7 @@ const SignUp = () => {
 
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full mb-3"
             onClick={handleGoogleSignUp}
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2">
@@ -95,6 +119,15 @@ const SignUp = () => {
               />
             </svg>
             {t('auth.continueWithGoogle')}
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className="w-full flex items-center justify-center gap-2" 
+            onClick={handleContinueAsGuest}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t('auth.continueAsGuest')}
           </Button>
         </CardContent>
         <CardFooter className="flex justify-center">

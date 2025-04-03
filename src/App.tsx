@@ -8,6 +8,8 @@ import { TranslationProvider } from "@/hooks/useTranslation";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
+import Services from "./pages/Services";
+import ServiceDetail from "./pages/ServiceDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,7 +25,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
-            {/* Autres routes à ajouter ici */}
+            <Route path="/services" element={<Services />} />
+            <Route path="/service/:serviceType" element={<ServiceDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

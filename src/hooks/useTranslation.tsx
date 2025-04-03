@@ -57,6 +57,14 @@ const translations: Translations = {
     fr: 'Inscription',
     ar: 'التسجيل'
   },
+  'auth.firstName': {
+    fr: 'Prénom',
+    ar: 'الاسم الأول'
+  },
+  'auth.lastName': {
+    fr: 'Nom',
+    ar: 'اسم العائلة'
+  },
   'auth.phoneNumber': {
     fr: 'Numéro de téléphone',
     ar: 'رقم الهاتف'
@@ -69,9 +77,17 @@ const translations: Translations = {
     fr: 'Continuer avec Google',
     ar: 'المتابعة بحساب Google'
   },
+  'auth.continueAsGuest': {
+    fr: 'Continuer en tant qu\'invité',
+    ar: 'المتابعة كضيف'
+  },
   'auth.forgotPassword': {
     fr: 'Mot de passe oublié ?',
     ar: 'نسيت كلمة المرور؟'
+  },
+  'auth.alreadyHaveAccount': {
+    fr: 'Vous avez déjà un compte ?',
+    ar: 'هل لديك حساب بالفعل؟'
   },
   
   // Home page
@@ -109,6 +125,10 @@ const translations: Translations = {
   },
   
   // Services
+  'services.title': {
+    fr: 'Nos Services Médicaux',
+    ar: 'خدماتنا الطبية'
+  },
   'services.homecare': {
     fr: 'Soins à domicile',
     ar: 'الرعاية المنزلية'
@@ -192,6 +212,18 @@ const translations: Translations = {
   'services.nearbyProfessionals': {
     fr: 'Professionnels à proximité',
     ar: 'المتخصصون القريبون'
+  },
+  'services.moreServices': {
+    fr: 'Autres services',
+    ar: 'خدمات أخرى'
+  },
+  'services.book': {
+    fr: 'Réserver',
+    ar: 'حجز'
+  },
+  'services.bookingSuccess': {
+    fr: 'Votre demande a été envoyée avec succès !',
+    ar: 'تم إرسال طلبك بنجاح!'
   },
   
   // Appointments
@@ -300,6 +332,18 @@ const translations: Translations = {
   'general.language': {
     fr: 'Langue',
     ar: 'اللغة'
+  },
+  'general.viewMore': {
+    fr: 'Voir plus',
+    ar: 'عرض المزيد'
+  },
+  'general.address': {
+    fr: 'Adresse',
+    ar: 'العنوان'
+  },
+  'general.notes': {
+    fr: 'Notes / Symptômes',
+    ar: 'ملاحظات / أعراض'
   }
 };
 

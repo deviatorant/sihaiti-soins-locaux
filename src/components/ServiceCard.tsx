@@ -32,9 +32,14 @@ const ServiceCard = ({
         isTeleconsultation && "teleconsultation-service bg-blue-50 border-l-4 border-medical-blue", 
         isHomecare && "homecare-service bg-green-50 border-l-4 border-medical-green",
         !isEmergency && !isTeleconsultation && !isHomecare && "bg-white border border-gray-200",
-        isRTL ? "text-right" : "text-left"
+        isRTL ? "text-right" : "text-left",
+        // Handle border direction for RTL
+        isRTL && "border-r-4 border-l-0"
       )}
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label={title}
     >
       <div className={cn(
         "service-icon inline-flex items-center justify-center w-12 h-12 rounded-full mb-4",
