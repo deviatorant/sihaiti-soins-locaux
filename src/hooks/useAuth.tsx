@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, auth as supabaseAuth } from '@/services/supabase';
@@ -31,7 +30,7 @@ type AuthContextType = {
   loginWithPhone: (phone: string, otp: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithFacebook: () => Promise<void>;
-  continueAsGuest: () => void;
+  continueAsGuest: () => Promise<void>;
   logout: () => Promise<void>;
   register: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   sendOTP: (phone: string) => Promise<void>;
@@ -52,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // Initialize auth state from Supabase
   useEffect(() => {
@@ -174,7 +174,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const { data, error } = await supabaseAuth.signInWithOtp(formattedPhone);
       
-      if (error) throw error;
+      if (error) {
+        // Check specifically for the unsupported provider error
+        if (error.message.includes('Unsupported provider') || 
+            (error as any).error_description?.includes('not enabled')) {
+          throw new Error('Phone authentication is not enabled in this project');
+        }
+        throw error;
+      }
       
       toast({
         title: t('login.otpSent'),
@@ -184,11 +191,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     } catch (error: any) {
       console.error('OTP sending failed:', error);
-      toast({
-        title: t('login.otpError'),
-        description: error.message,
-        variant: 'destructive',
-      });
       throw error;
     } finally {
       setIsLoading(false);

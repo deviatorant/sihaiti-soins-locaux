@@ -19,6 +19,9 @@ export function useMobile() {
   return !!isMobile;
 }
 
+// Add an alias for backwards compatibility
+export const useIsMobile = useMobile;
+
 // Add the withToggleState HOC
 export function withToggleState<P extends object>(
   Component: React.ComponentType<P & { isOpen: boolean; toggle: () => void }>

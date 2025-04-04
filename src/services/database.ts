@@ -23,6 +23,8 @@ export interface Doctor {
   acceptingNewPatients: boolean;
   insurances: string[];
   coordinates: [number, number];
+  location: string;
+  availableSlots: string[];
 }
 
 // Fetch all doctors
@@ -104,7 +106,9 @@ const mockDoctors: Doctor[] = [
     reviewCount: 128,
     acceptingNewPatients: true,
     insurances: ['CNOPS', 'CNSS', 'RMA'],
-    coordinates: [33.5731, -7.5898]
+    coordinates: [33.5731, -7.5898],
+    location: 'Casablanca',
+    availableSlots: ['9:00', '11:30', '14:00']
   },
   {
     id: '2',
@@ -126,7 +130,9 @@ const mockDoctors: Doctor[] = [
     reviewCount: 95,
     acceptingNewPatients: true,
     insurances: ['CNOPS', 'CNSS', 'AXA'],
-    coordinates: [33.5950, -7.6192]
+    coordinates: [33.5950, -7.6192],
+    location: 'Casablanca',
+    availableSlots: ['10:00', '13:30', '16:00']
   },
   {
     id: '3',
@@ -148,7 +154,9 @@ const mockDoctors: Doctor[] = [
     reviewCount: 76,
     acceptingNewPatients: false,
     insurances: ['CNSS', 'MAMDA', 'Allianz'],
-    coordinates: [34.0209, -6.8416]
+    coordinates: [34.0209, -6.8416],
+    location: 'Rabat',
+    availableSlots: ['11:00', '14:30', '17:00']
   },
   {
     id: '4',
@@ -170,7 +178,9 @@ const mockDoctors: Doctor[] = [
     reviewCount: 102,
     acceptingNewPatients: true,
     insurances: ['CNOPS', 'RMA', 'MAMDA'],
-    coordinates: [31.6295, -7.9811]
+    coordinates: [31.6295, -7.9811],
+    location: 'Marrakech',
+    availableSlots: ['12:00', '15:30', '18:00']
   },
   {
     id: '5',
@@ -192,7 +202,9 @@ const mockDoctors: Doctor[] = [
     reviewCount: 68,
     acceptingNewPatients: true,
     insurances: ['CNSS', 'Allianz', 'Wafa Assurance'],
-    coordinates: [35.7595, -5.8340]
+    coordinates: [35.7595, -5.8340],
+    location: 'Tangier',
+    availableSlots: ['13:00', '16:30', '19:00']
   }
 ];
 

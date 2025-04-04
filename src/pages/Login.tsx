@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "@/hooks/use-toast";
-import { Facebook, Mail, Phone, Smartphone, User } from "lucide-react";
+import { Facebook, Mail, Phone, Smartphone, User, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login = () => {
   const { t, isRTL } = useTranslation();
@@ -24,6 +25,7 @@ const Login = () => {
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneAuthError, setPhoneAuthError] = useState<string | null>(null);
   
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +50,7 @@ const Login = () => {
   
   const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPhoneAuthError(null);
     
     // Format phone number (ensure it has country code)
     const formattedPhone = phoneNumber.startsWith('+') 
@@ -59,8 +62,13 @@ const Login = () => {
       try {
         await sendOTP(formattedPhone);
         setIsOtpSent(true);
-      } catch (error) {
-        console.error(error);
+      } catch (error: any) {
+        console.error('Phone auth error:', error);
+        if (error?.message?.includes('Unsupported provider') || error?.error_description?.includes('not enabled')) {
+          setPhoneAuthError("Phone authentication is not enabled. Please use email or social login instead.");
+        } else {
+          setPhoneAuthError(error?.message || "Failed to send OTP. Please try another login method.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -69,8 +77,9 @@ const Login = () => {
       try {
         await loginWithPhone(formattedPhone, otp);
         navigate("/");
-      } catch (error) {
-        console.error(error);
+      } catch (error: any) {
+        console.error('OTP verification error:', error);
+        setPhoneAuthError(error?.message || "Failed to verify OTP. Please try again or use another login method.");
       } finally {
         setIsLoading(false);
       }
@@ -175,6 +184,14 @@ const Login = () => {
                 
                 <TabsContent value="phone">
                   <form onSubmit={handlePhoneLogin} className="space-y-4">
+                    {phoneAuthError && (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Authentication Error</AlertTitle>
+                        <AlertDescription>{phoneAuthError}</AlertDescription>
+                      </Alert>
+                    )}
+                    
                     <div className="space-y-2">
                       <Label htmlFor="phone">{t('login.phoneNumber')}</Label>
                       <div className="flex">
@@ -227,7 +244,11 @@ const Login = () => {
                         type="button"
                         variant="outline"
                         className="w-full"
-                        onClick={() => setIsOtpSent(false)}
+                        onClick={() => {
+                          setIsOtpSent(false);
+                          setOtp("");
+                          setPhoneAuthError(null);
+                        }}
                         disabled={isLoading}
                       >
                         {t('login.changePhoneNumber')}
