@@ -1,100 +1,96 @@
 
 import { supabase } from './supabase';
-import { initializeAllServices } from './supabase';
 
-// Simplified setup for ambulance and pharmacy tables
+// Initialize database tables for ambulance and pharmacy services
 export const setupAmbulanceAndPharmacyTables = async () => {
-  console.log('Setting up ambulance and pharmacy tables...');
-  
   try {
-    // Check if tables exist
-    const { data: tables, error: tablesError } = await supabase.rpc('get_tables');
+    console.log('Setting up ambulance and pharmacy tables...');
     
-    if (tablesError) {
-      console.error('Error fetching tables:', tablesError);
-      return;
+    // Create ambulance_requests table if it doesn't exist
+    const { error: ambulanceError } = await supabase.rpc('create_ambulance_requests_table_if_not_exists');
+    if (ambulanceError) {
+      console.error('Error creating ambulance_requests table:', ambulanceError);
+    } else {
+      console.log('ambulance_requests table created or already exists');
+    }
+
+    // Create medication_orders table if it doesn't exist
+    const { error: medicationError } = await supabase.rpc('create_medication_orders_table_if_not_exists');
+    if (medicationError) {
+      console.error('Error creating medication_orders table:', medicationError);
+    } else {
+      console.log('medication_orders table created or already exists');
     }
     
-    const hasAmbulanceRequests = tables?.includes('ambulance_requests');
-    const hasMedicationOrders = tables?.includes('medication_orders');
-    const hasUserCalendarSettings = tables?.includes('user_calendar_settings');
-    
-    if (!hasAmbulanceRequests) {
-      console.log('Creating ambulance_requests table');
-      const { error } = await supabase.from('ambulance_requests').select('id').limit(1);
-      if (error && error.code === '42P01') { // Table doesn't exist
-        // In production, run the SQL from supabase-tables-setup.sql
-        console.log('Table ambulance_requests does not exist, would create it in production');
-      }
-    }
-    
-    if (!hasMedicationOrders) {
-      console.log('Creating medication_orders table');
-      const { error } = await supabase.from('medication_orders').select('id').limit(1);
-      if (error && error.code === '42P01') { // Table doesn't exist
-        // In production, run the SQL from supabase-tables-setup.sql
-        console.log('Table medication_orders does not exist, would create it in production');
-      }
-    }
-    
-    if (!hasUserCalendarSettings) {
-      console.log('Creating user_calendar_settings table');
-      const { error } = await supabase.from('user_calendar_settings').select('user_id').limit(1);
-      if (error && error.code === '42P01') { // Table doesn't exist
-        // In production, run the SQL from supabase-tables-setup.sql
-        console.log('Table user_calendar_settings does not exist, would create it in production');
-      }
+    // Create user_calendar_settings table if it doesn't exist
+    const { error: calendarError } = await supabase.rpc('create_user_calendar_settings_table_if_not_exists');
+    if (calendarError) {
+      console.error('Error creating user_calendar_settings table:', calendarError);
+    } else {
+      console.log('user_calendar_settings table created or already exists');
     }
     
     console.log('Ambulance and pharmacy tables setup completed');
   } catch (error) {
-    console.error('Error setting up tables:', error);
+    console.error('Error setting up ambulance and pharmacy tables:', error);
   }
 };
 
-// Setup storage buckets (medical files and prescriptions)
-export const setupStorageBuckets = async () => {
+// Update the main initialization to include the new services
+export const initializeAllServicesWithAmbuPharm = async () => {
+  // First run the original initialization
+  const { initializeAllServices } = await import('./supabase');
+  await initializeAllServices();
+  
+  // Then set up the new services
+  await setupAmbulanceAndPharmacyTables();
+  
+  // Set up storage buckets
+  await setupStorageBuckets();
+  
+  console.log('All services initialized including ambulance and pharmacy');
+  return true;
+};
+
+// Setup storage buckets for prescriptions and medical files
+const setupStorageBuckets = async () => {
   try {
-    // Check if buckets exist before trying to create them
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    // Check if buckets exist
+    const { data: buckets, error: getBucketsError } = await supabase.storage.listBuckets();
     
-    if (bucketsError) {
-      console.error('Error listing buckets:', bucketsError);
+    if (getBucketsError) {
+      console.error('Error listing storage buckets:', getBucketsError);
       return;
     }
     
-    const hasMedicalFilesBucket = buckets?.some(bucket => bucket.name === 'medical-files');
-    const hasPrescriptionsBucket = buckets?.some(bucket => bucket.name === 'prescriptions');
-    
-    if (!hasMedicalFilesBucket) {
-      console.log('Creating medical-files bucket');
-      // In production: await supabase.storage.createBucket('medical-files', { public: false });
+    // Create medical-files bucket if it doesn't exist
+    if (!buckets?.find(bucket => bucket.name === 'medical-files')) {
+      const { error: createBucketError } = await supabase.storage.createBucket('medical-files', {
+        public: false,
+        fileSizeLimit: 5 * 1024 * 1024, // 5MB limit
+      });
+      
+      if (createBucketError) {
+        console.error('Error creating medical-files bucket:', createBucketError);
+      } else {
+        console.log('medical-files bucket created');
+      }
     }
     
-    if (!hasPrescriptionsBucket) {
-      console.log('Creating prescriptions bucket');
-      // In production: await supabase.storage.createBucket('prescriptions', { public: false });
+    // Create prescriptions bucket if it doesn't exist
+    if (!buckets?.find(bucket => bucket.name === 'prescriptions')) {
+      const { error: createBucketError } = await supabase.storage.createBucket('prescriptions', {
+        public: false,
+        fileSizeLimit: 2 * 1024 * 1024, // 2MB limit
+      });
+      
+      if (createBucketError) {
+        console.error('Error creating prescriptions bucket:', createBucketError);
+      } else {
+        console.log('prescriptions bucket created');
+      }
     }
-    
   } catch (error) {
-    console.error('Error checking/creating storage buckets:', error);
-  }
-};
-
-// Initialize all services including ambulance and pharmacy
-export const initializeAllServicesWithAmbuPharm = async () => {
-  try {
-    // Initialize base services
-    await initializeAllServices();
-    
-    // Setup ambulance and pharmacy tables
-    await setupAmbulanceAndPharmacyTables();
-    
-    // Setup storage buckets
-    await setupStorageBuckets();
-    
-    console.log('All services initialized including ambulance and pharmacy');
-  } catch (error) {
-    console.error('Error initializing ambulance and pharmacy services:', error);
+    console.error('Error setting up storage buckets:', error);
   }
 };

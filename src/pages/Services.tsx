@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
@@ -23,14 +23,9 @@ import {
 } from "lucide-react";
 
 const Services = () => {
-  const { t, isRTL, language } = useTranslation();
+  const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // Log current language on mount and when language changes
-  useEffect(() => {
-    console.log("Services page - Current language:", language);
-  }, [language]);
 
   const handleServiceClick = (serviceType: string) => {
     console.log(`Service clicked: ${serviceType}`);
@@ -54,7 +49,7 @@ const Services = () => {
             placeholder={t('general.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+            className={`pl-10 pr-4 py-2 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
             dir={isRTL ? 'rtl' : 'ltr'}
           />
         </div>

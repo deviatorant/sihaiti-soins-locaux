@@ -57,12 +57,11 @@ const AppSetup = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Changed the order of providers to fix the circular dependency issue
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <TranslationProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <TranslationProvider>
           <DoctorsProvider>
             <Toaster />
             <Sonner />
@@ -86,8 +85,8 @@ const App = () => (
               </AppSetup>
             </BrowserRouter>
           </DoctorsProvider>
-        </AuthProvider>
-      </TranslationProvider>
+        </TranslationProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

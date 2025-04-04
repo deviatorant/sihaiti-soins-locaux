@@ -9,7 +9,7 @@ export type LanguageCode = 'en' | 'fr' | 'ar';
 type TranslationContextType = {
   language: LanguageCode;
   setLanguage: (lang: LanguageCode) => void;
-  t: (key: string, params?: Record<string, string>) => string;
+  t: (key: string) => string;
   isRTL: boolean;
 };
 
@@ -18,23 +18,16 @@ const TranslationContext = createContext<TranslationContextType | undefined>(und
 
 // Provider component
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Always initialize with French by default
-  const [language, setLanguage] = useState<LanguageCode>('fr');
-  
-  // Set language preference based on localStorage on mount, but still default to French
-  useEffect(() => {
+  // Initialize with browser language or default to English
+  const [language, setLanguage] = useState<LanguageCode>(() => {
     const savedLang = localStorage.getItem('sihati_language');
     if (savedLang && ['en', 'fr', 'ar'].includes(savedLang)) {
-      setLanguage(savedLang as LanguageCode);
-    } else {
-      // Default to French and save to localStorage
-      localStorage.setItem('sihati_language', 'fr');
+      return savedLang as LanguageCode;
     }
     
-    // Set document lang and dir attributes
-    document.documentElement.lang = language;
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-  }, []);
+    const browserLang = navigator.language.split('-')[0];
+    return (browserLang === 'fr' || browserLang === 'ar') ? browserLang as LanguageCode : 'en';
+  });
   
   // Save language preference to both localStorage and Supabase if user is authenticated
   useEffect(() => {
@@ -56,8 +49,8 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     updateUserLanguagePreference().catch(console.error);
   }, [language]);
 
-  // Translation function with improved fallback
-  const t = (key: string, params?: Record<string, string>): string => {
+  // Translation function
+  const t = (key: string): string => {
     const keys = key.split('.');
     let value: any = translationData[language];
     
@@ -66,20 +59,11 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         value = value[k];
       } else {
         console.warn(`Translation key not found: ${key}`);
-        // Return key last part as fallback instead of showing translation keys
-        const lastKeyPart = key.split('.').pop() || key;
-        return lastKeyPart;
+        return key.split('.').pop() || key;
       }
     }
     
-    // Handle string interpolation if params are provided
-    if (typeof value === 'string' && params) {
-      return Object.entries(params).reduce((acc, [paramKey, paramValue]) => {
-        return acc.replace(new RegExp(`{${paramKey}}`, 'g'), paramValue);
-      }, value);
-    }
-    
-    return typeof value === 'string' ? value : key.split('.').pop() || key;
+    return value;
   };
 
   return (

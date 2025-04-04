@@ -1,14 +1,15 @@
 
-import React, { createContext, useContext, useState, useMemo } from 'react';
-import { getDoctors, Doctor } from '@/services/database';
-import { useGeolocation } from '@/hooks/useGeolocation';
-
-type SortOption = 'distance' | 'rating' | 'price';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Doctor, getDoctors, searchDoctors } from '@/services/database';
+import { useAuth } from './useAuth';
+import { useGeolocation } from './useGeolocation';
+import Fuse from 'fuse.js';
 
 type DoctorsContextType = {
   doctors: Doctor[];
-  filteredDoctors: Doctor[];
   isLoading: boolean;
+  error: Error | null;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   filterBySpecialty: string;
@@ -21,150 +22,157 @@ type DoctorsContextType = {
   setShowAvailableTodayOnly: (show: boolean) => void;
   searchRadius: number;
   setSearchRadius: (radius: number) => void;
-  sortBy: SortOption;
-  setSortBy: (sort: SortOption) => void;
+  sortBy: 'distance' | 'rating' | 'price';
+  setSortBy: (sort: 'distance' | 'rating' | 'price') => void;
+  filteredDoctors: Doctor[];
   selectedDoctor: Doctor | null;
   setSelectedDoctor: (doctor: Doctor | null) => void;
 };
 
 const DoctorsContext = createContext<DoctorsContextType | undefined>(undefined);
 
+const useFuseSearch = (doctors: Doctor[], searchQuery: string): Doctor[] => {
+  const fuse = new Fuse(doctors, {
+    keys: ['name', 'specialty', 'location'],
+    threshold: 0.3,
+    ignoreLocation: true,
+  });
+  
+  return searchQuery ? fuse.search(searchQuery).map(result => result.item) : doctors;
+};
+
 export const DoctorsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const { position } = useGeolocation();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBySpecialty, setFilterBySpecialty] = useState('all');
   const [filterByLanguage, setFilterByLanguage] = useState('all');
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const [showAvailableTodayOnly, setShowAvailableTodayOnly] = useState(false);
-  const [searchRadius, setSearchRadius] = useState(10);
-  const [sortBy, setSortBy] = useState<SortOption>('distance');
+  const [searchRadius, setSearchRadius] = useState(10); // 10km default radius
+  const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'price'>('distance');
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   
-  const { position, calculateDistance } = useGeolocation();
+  // Fetch doctors with React Query
+  const { data: doctors = [], isLoading, error } = useQuery({
+    queryKey: ['doctors'],
+    queryFn: getDoctors,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
   
-  const getDistance = (doctor: Doctor) => {
-    if (!position || !doctor.lat || !doctor.lng) return Infinity;
-    return calculateDistance(
-      position.latitude,
-      position.longitude,
-      doctor.lat,
-      doctor.lng
-    );
-  };
-  
-  React.useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        setIsLoading(true);
-        const doctorsData = await getDoctors();
-        setDoctors(doctorsData);
-      } catch (error) {
-        console.error('Error fetching doctors:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Apply location and filters to doctors
+  const processedDoctors = React.useMemo(() => {
+    let result = [...doctors];
     
-    fetchDoctors();
-  }, []);
-  
-  const filteredDoctors = useMemo(() => {
-    const doctorsWithDistance = doctors.map(doctor => ({
-      ...doctor,
-      distance: position ? getDistance(doctor) : undefined
-    }));
-    
-    let filtered = doctorsWithDistance;
-    
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(doctor => 
-        doctor.name.toLowerCase().includes(query) ||
-        doctor.specialty.toLowerCase().includes(query) ||
-        doctor.address.toLowerCase().includes(query)
-      );
+    // Calculate distances if we have the user's position
+    if (position) {
+      result = result.map(doctor => ({
+        ...doctor,
+        distance: calculateDistance(
+          position.latitude, position.longitude,
+          doctor.lat, doctor.lng
+        )
+      }));
     }
     
+    return result;
+  }, [doctors, position]);
+  
+  // Apply all filters
+  const filteredDoctors = React.useMemo(() => {
+    // Start with Fuse.js search results
+    let result = useFuseSearch(processedDoctors, searchQuery);
+    
+    // Apply filters
     if (filterBySpecialty !== 'all') {
-      filtered = filtered.filter(doctor => 
-        doctor.specialty === filterBySpecialty
-      );
+      result = result.filter(doctor => doctor.specialty === filterBySpecialty);
     }
     
     if (filterByLanguage !== 'all') {
-      filtered = filtered.filter(doctor => 
-        doctor.languages.includes(filterByLanguage)
-      );
+      result = result.filter(doctor => doctor.languages.includes(filterByLanguage));
     }
     
     if (showOnlineOnly) {
-      filtered = filtered.filter(doctor => doctor.online);
+      result = result.filter(doctor => doctor.online);
     }
     
     if (showAvailableTodayOnly) {
-      filtered = filtered.filter(doctor => doctor.availableToday);
+      result = result.filter(doctor => doctor.availableToday);
     }
     
-    if (position) {
-      filtered = filtered.filter(doctor => 
-        doctor.distance !== undefined && doctor.distance <= searchRadius
-      );
+    // Filter by radius if we have position and distance
+    if (position && searchRadius > 0) {
+      result = result.filter(doctor => doctor.distance! <= searchRadius);
     }
     
+    // Sort
     switch (sortBy) {
       case 'distance':
-        filtered.sort((a, b) => {
-          if (a.distance === undefined) return 1;
-          if (b.distance === undefined) return -1;
-          return a.distance - b.distance;
-        });
+        result.sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity));
         break;
       case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
+        result.sort((a, b) => b.rating - a.rating);
         break;
       case 'price':
-        filtered.sort((a, b) => a.consultationFee - b.consultationFee);
+        result.sort((a, b) => a.consultationFee - b.consultationFee);
         break;
     }
     
-    return filtered;
+    return result;
   }, [
-    doctors,
-    position,
-    searchQuery,
-    filterBySpecialty,
-    filterByLanguage,
+    processedDoctors, 
+    searchQuery, 
+    filterBySpecialty, 
+    filterByLanguage, 
     showOnlineOnly,
     showAvailableTodayOnly,
+    position,
     searchRadius,
     sortBy
   ]);
   
-  const value = {
-    doctors,
-    filteredDoctors,
-    isLoading,
-    searchQuery,
-    setSearchQuery,
-    filterBySpecialty,
-    setFilterBySpecialty,
-    filterByLanguage,
-    setFilterByLanguage,
-    showOnlineOnly,
-    setShowOnlineOnly,
-    showAvailableTodayOnly,
-    setShowAvailableTodayOnly,
-    searchRadius,
-    setSearchRadius,
-    sortBy,
-    setSortBy,
-    selectedDoctor,
-    setSelectedDoctor
+  // Helper function to calculate distance
+  const calculateDistance = (
+    lat1: number, lon1: number,
+    lat2: number, lon2: number
+  ): number => {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in km
   };
   
   return (
-    <DoctorsContext.Provider value={value}>
+    <DoctorsContext.Provider
+      value={{
+        doctors: processedDoctors,
+        isLoading,
+        error: error as Error | null,
+        searchQuery,
+        setSearchQuery,
+        filterBySpecialty,
+        setFilterBySpecialty,
+        filterByLanguage,
+        setFilterByLanguage,
+        showOnlineOnly,
+        setShowOnlineOnly,
+        showAvailableTodayOnly,
+        setShowAvailableTodayOnly,
+        searchRadius,
+        setSearchRadius,
+        sortBy,
+        setSortBy,
+        filteredDoctors,
+        selectedDoctor,
+        setSelectedDoctor,
+      }}
+    >
       {children}
     </DoctorsContext.Provider>
   );

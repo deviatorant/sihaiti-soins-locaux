@@ -1,10 +1,10 @@
-
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/hooks/useAuth";
 import withAuth from "@/hooks/auth/withAuth";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useDoctors } from "@/hooks/useDoctors";
+import withToggleState from "@/hooks/auth/withToggleState";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";

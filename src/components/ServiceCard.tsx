@@ -2,7 +2,6 @@
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useEffect } from "react";
 
 interface ServiceCardProps {
   title: string;
@@ -23,12 +22,7 @@ const ServiceCard = ({
   isHomecare = false,
   onClick
 }: ServiceCardProps) => {
-  const { isRTL, language } = useTranslation();
-  
-  // Log service card info for debugging
-  useEffect(() => {
-    console.log(`Service Card - Title: ${title}, Description: ${description}, Lang: ${language}`);
-  }, [title, description, language]);
+  const { isRTL } = useTranslation();
   
   return (
     <div 
@@ -40,9 +34,7 @@ const ServiceCard = ({
         !isEmergency && !isTeleconsultation && !isHomecare && "bg-white border border-gray-200",
         isRTL ? "text-right" : "text-left",
         // Handle border direction for RTL
-        isRTL && isEmergency && "border-r-4 border-l-0 border-medical-red",
-        isRTL && isTeleconsultation && "border-r-4 border-l-0 border-medical-blue",
-        isRTL && isHomecare && "border-r-4 border-l-0 border-medical-green"
+        isRTL && "border-r-4 border-l-0"
       )}
       onClick={onClick}
       role="button"

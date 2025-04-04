@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Globe } from "lucide-react";
@@ -8,15 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { useEffect } from "react";
 
 const LanguageSwitcher = () => {
   const { language, setLanguage, t } = useTranslation();
-
-  // Log current language on mount and when language changes
-  useEffect(() => {
-    console.log("Current language:", language);
-  }, [language]);
 
   const languages = [
     { code: 'fr', label: 'Français', flag: '🇫🇷' },
@@ -28,13 +23,13 @@ const LanguageSwitcher = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
-          variant="outline" 
+          variant="ghost" 
           size="sm"
-          className="rounded-full flex items-center justify-center gap-1.5 hover:bg-gray-100/50 transition-colors border-medical-blue"
+          className="rounded-full flex items-center justify-center gap-1.5 hover:bg-gray-100/50 transition-colors"
         >
-          <Globe className="h-4 w-4 text-medical-blue" />
+          <Globe className="h-4 w-4 text-gray-700" />
           <span className="text-xs font-medium uppercase hidden sm:inline-block">
-            {language === 'fr' ? '🇫🇷 FR' : language === 'ar' ? '🇲🇦 AR' : '🇬🇧 EN'}
+            {language}
           </span>
         </Button>
       </DropdownMenuTrigger>
@@ -42,7 +37,7 @@ const LanguageSwitcher = () => {
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
-            className={`cursor-pointer flex items-center space-x-2 ${language === lang.code ? 'font-bold bg-blue-50' : ''}`}
+            className={`cursor-pointer flex items-center space-x-2 ${language === lang.code ? 'font-bold bg-gray-100' : ''}`}
             onClick={() => setLanguage(lang.code as any)}
           >
             <span className="text-base mr-2">{lang.flag}</span>
