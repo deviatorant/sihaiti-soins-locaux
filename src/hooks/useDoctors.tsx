@@ -1,7 +1,5 @@
-
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import { getDoctors } from '@/services/database';
-import { Doctor } from '@/services/database';
+import { getDoctors, Doctor } from '@/services/database';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
 type SortOption = 'distance' | 'rating' | 'price';
@@ -44,7 +42,6 @@ export const DoctorsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   
   const { position, calculateDistance } = useGeolocation();
   
-  // Helper function to calculate distance
   const getDistance = (doctor: Doctor) => {
     if (!position || !doctor.lat || !doctor.lng) return Infinity;
     return calculateDistance(
@@ -55,7 +52,6 @@ export const DoctorsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
   };
   
-  // Fetch doctors on mount
   React.useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -72,18 +68,14 @@ export const DoctorsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     fetchDoctors();
   }, []);
   
-  // Filter and sort doctors
   const filteredDoctors = useMemo(() => {
-    // Add distance to doctors if user position is available
     const doctorsWithDistance = doctors.map(doctor => ({
       ...doctor,
       distance: position ? getDistance(doctor) : undefined
     }));
     
-    // Apply filters
     let filtered = doctorsWithDistance;
     
-    // Search query filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(doctor => 
@@ -93,42 +85,35 @@ export const DoctorsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
     }
     
-    // Specialty filter
     if (filterBySpecialty !== 'all') {
       filtered = filtered.filter(doctor => 
         doctor.specialty === filterBySpecialty
       );
     }
     
-    // Language filter
     if (filterByLanguage !== 'all') {
       filtered = filtered.filter(doctor => 
         doctor.languages.includes(filterByLanguage)
       );
     }
     
-    // Online only filter
     if (showOnlineOnly) {
       filtered = filtered.filter(doctor => doctor.online);
     }
     
-    // Available today filter
     if (showAvailableTodayOnly) {
       filtered = filtered.filter(doctor => doctor.availableToday);
     }
     
-    // Distance filter (only if position is available)
     if (position) {
       filtered = filtered.filter(doctor => 
         doctor.distance !== undefined && doctor.distance <= searchRadius
       );
     }
     
-    // Sort doctors
     switch (sortBy) {
       case 'distance':
         filtered.sort((a, b) => {
-          // If distance is not available, put them at the end
           if (a.distance === undefined) return 1;
           if (b.distance === undefined) return -1;
           return a.distance - b.distance;
