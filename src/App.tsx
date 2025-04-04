@@ -8,7 +8,7 @@ import { TranslationProvider } from "@/hooks/useTranslation";
 import { AuthProvider } from "@/hooks/useAuth";
 import { DoctorsProvider } from "@/hooks/useDoctors";
 import { useEffect } from "react";
-import { setupDatabase } from "@/services/supabase";
+import { initializeAllServices } from "@/services/supabase";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -41,8 +41,8 @@ const AppSetup = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Setup database tables if needed
-        await setupDatabase();
+        // Initialize all services (database, OAuth, Twilio, Mapbox, Calendar)
+        await initializeAllServices();
         console.log('App initialization complete');
       } catch (error) {
         console.error('Error initializing app:', error);

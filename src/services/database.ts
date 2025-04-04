@@ -1,330 +1,233 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 
-// Initialize Supabase client (we'll use environment variables in a real application)
-const supabaseUrl = 'https://your-supabase-project.supabase.co';
-const supabaseKey = 'your-supabase-anon-key';
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
-
+// Define the Doctor interface
 export interface Doctor {
-  id: number;
+  id: string;
   name: string;
   specialty: string;
+  bio: string;
+  education: string[];
+  experience: number;
   languages: string[];
-  rating: number;
-  reviews: number;
-  online: boolean;
+  certifications: string[];
   avatar: string;
-  verified: boolean;
-  location: string;
+  rating: number;
+  consultationFee: number;
+  availableToday: boolean;
+  online: boolean;
   lat: number;
   lng: number;
   distance?: number;
-  education: string;
-  experience: string;
-  consultationFee: number;
-  bio: string;
-  availableToday: boolean;
-  availableSlots?: string[];
+  address: string;
+  reviewCount: number;
+  acceptingNewPatients: boolean;
+  insurances: string[];
+  coordinates: [number, number];
 }
 
-export interface Consultation {
-  id: number;
-  doctorId: number;
-  patientId: string;
-  date: string;
-  time: string;
-  type: 'Video' | 'Audio' | 'Chat' | 'In-person';
-  duration: string;
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
-  summary: string;
-  documents: string[];
-}
-
-// Database setup script
-export const setupDatabase = async () => {
-  // Create doctors table
-  await supabase.rpc('create_doctors_table', {
-    sql: `
-      CREATE TABLE IF NOT EXISTS doctors (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        specialty TEXT NOT NULL,
-        languages TEXT[] NOT NULL,
-        rating FLOAT NOT NULL,
-        reviews INTEGER NOT NULL,
-        online BOOLEAN NOT NULL DEFAULT false,
-        avatar TEXT,
-        verified BOOLEAN NOT NULL DEFAULT false,
-        location TEXT NOT NULL,
-        lat FLOAT NOT NULL,
-        lng FLOAT NOT NULL,
-        education TEXT,
-        experience TEXT,
-        consultation_fee INTEGER NOT NULL,
-        bio TEXT,
-        available_today BOOLEAN NOT NULL DEFAULT false,
-        available_slots TEXT[]
-      );
-      
-      CREATE INDEX IF NOT EXISTS idx_doctors_specialty ON doctors (specialty);
-      CREATE INDEX IF NOT EXISTS idx_doctors_online ON doctors (online);
-      CREATE INDEX IF NOT EXISTS idx_doctors_verified ON doctors (verified);
-    `
-  });
-
-  // Create consultations table
-  await supabase.rpc('create_consultations_table', {
-    sql: `
-      CREATE TABLE IF NOT EXISTS consultations (
-        id SERIAL PRIMARY KEY,
-        doctor_id INTEGER REFERENCES doctors(id),
-        patient_id TEXT NOT NULL,
-        date DATE NOT NULL,
-        time TIME NOT NULL,
-        type TEXT NOT NULL,
-        duration TEXT NOT NULL,
-        status TEXT NOT NULL,
-        summary TEXT,
-        documents TEXT[],
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-      );
-      
-      CREATE INDEX IF NOT EXISTS idx_consultations_patient ON consultations (patient_id);
-      CREATE INDEX IF NOT EXISTS idx_consultations_doctor ON consultations (doctor_id);
-      CREATE INDEX IF NOT EXISTS idx_consultations_date ON consultations (date);
-      CREATE INDEX IF NOT EXISTS idx_consultations_status ON consultations (status);
-    `
-  });
-
-  // Insert sample doctors data
-  await supabase.from('doctors').upsert([
-    {
-      id: 1,
-      name: "Dr. Leila Tazi",
-      specialty: "Gynecologist",
-      languages: ["Arabic", "French"],
-      rating: 4.9,
-      reviews: 156,
-      online: true,
-      avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-      verified: true,
-      location: "202 Women's Health Clinic, Casablanca",
-      lat: 33.5731,
-      lng: -7.5898,
-      education: "McGill University",
-      experience: "14 years",
-      consultation_fee: 350,
-      bio: "Specialist in women's health and reproductive medicine with expertise in minimally invasive surgery.",
-      available_today: true,
-      available_slots: ["10:00", "11:30", "14:00", "16:30"]
-    },
-    {
-      id: 2,
-      name: "Dr. Sarah Johnson",
-      specialty: "Cardiologist",
-      languages: ["Arabic", "French", "English"],
-      rating: 4.9,
-      reviews: 145,
-      online: true,
-      avatar: "https://randomuser.me/api/portraits/women/33.jpg",
-      verified: true,
-      location: "123 Medical Center, Casablanca",
-      lat: 33.5950,
-      lng: -7.6192,
-      education: "Harvard Medical School",
-      experience: "12 years",
-      consultation_fee: 400,
-      bio: "Board-certified cardiologist specializing in preventive cardiology and women's heart health.",
-      available_today: true,
-      available_slots: ["09:00", "11:00", "14:30"]
-    },
-    {
-      id: 3,
-      name: "Dr. Mohammed Alami",
-      specialty: "Pediatrician",
-      languages: ["Arabic", "French"],
-      rating: 4.8,
-      reviews: 98,
-      online: true,
-      avatar: "https://randomuser.me/api/portraits/men/42.jpg",
-      verified: true,
-      location: "45 Children's Clinic, Rabat",
-      lat: 34.0209,
-      lng: -6.8416,
-      education: "University of Rabat",
-      experience: "10 years",
-      consultation_fee: 300,
-      bio: "Compassionate pediatrician with a focus on newborn care and childhood development.",
-      available_today: false,
-      available_slots: []
-    }
-  ], { onConflict: 'id' });
-  
-  // Return success message
-  return { success: true, message: "Database setup completed successfully" };
-};
-
-// Doctor services
+// Fetch all doctors
 export const getDoctors = async (): Promise<Doctor[]> => {
-  const { data, error } = await supabase
-    .from('doctors')
-    .select('*');
-  
-  if (error) {
+  try {
+    const { data, error } = await supabase
+      .from('doctors')
+      .select('*');
+    
+    if (error) throw error;
+    
+    // If no data yet in database, return mock data
+    if (!data || data.length === 0) {
+      return mockDoctors;
+    }
+    
+    return data;
+  } catch (error) {
     console.error('Error fetching doctors:', error);
-    return [];
+    // Fallback to mock data
+    return mockDoctors;
   }
-  
-  return data as Doctor[];
 };
 
-export const getDoctorById = async (id: number): Promise<Doctor | null> => {
-  const { data, error } = await supabase
-    .from('doctors')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) {
-    console.error('Error fetching doctor:', error);
-    return null;
-  }
-  
-  return data as Doctor;
-};
-
-export const searchDoctors = async (
-  query: string,
-  filters: {
-    specialty?: string;
-    languages?: string[];
-    online?: boolean;
-    availableToday?: boolean;
-    location?: { lat: number; lng: number; radius: number };
-  }
-): Promise<Doctor[]> => {
-  let queryBuilder = supabase
-    .from('doctors')
-    .select('*');
-  
-  // Apply filters
-  if (filters.specialty) {
-    queryBuilder = queryBuilder.eq('specialty', filters.specialty);
-  }
-  
-  if (filters.languages && filters.languages.length > 0) {
-    queryBuilder = queryBuilder.overlaps('languages', filters.languages);
-  }
-  
-  if (filters.online !== undefined) {
-    queryBuilder = queryBuilder.eq('online', filters.online);
-  }
-  
-  if (filters.availableToday !== undefined) {
-    queryBuilder = queryBuilder.eq('available_today', filters.availableToday);
-  }
-  
-  // Get results
-  const { data, error } = await queryBuilder;
-  
-  if (error) {
+// Search doctors by name, specialty or location
+export const searchDoctors = async (query: string): Promise<Doctor[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('doctors')
+      .select('*')
+      .or(`name.ilike.%${query}%,specialty.ilike.%${query}%,address.ilike.%${query}%`);
+    
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
     console.error('Error searching doctors:', error);
     return [];
   }
-  
-  // Client-side filtering for text search and location
-  let filteredData = data as Doctor[];
-  
-  // Text search if query provided
-  if (query) {
-    const lowerQuery = query.toLowerCase();
-    filteredData = filteredData.filter(
-      doctor => 
-        doctor.name.toLowerCase().includes(lowerQuery) ||
-        doctor.specialty.toLowerCase().includes(lowerQuery) ||
-        doctor.location.toLowerCase().includes(lowerQuery)
-    );
-  }
-  
-  // Location filtering if provided
-  if (filters.location) {
-    const { lat, lng, radius } = filters.location;
+};
+
+// Get doctor by ID
+export const getDoctorById = async (id: string): Promise<Doctor | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('doctors')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    // Calculate distance using the Haversine formula
-    filteredData = filteredData.map(doctor => {
-      const distance = calculateDistance(
-        lat, lng,
-        doctor.lat, doctor.lng
-      );
-      return { ...doctor, distance };
-    }).filter(doctor => doctor.distance! <= radius);
-  }
-  
-  return filteredData;
-};
-
-// Helper function to calculate distance using Haversine formula
-const calculateDistance = (
-  lat1: number, lon1: number,
-  lat2: number, lon2: number
-): number => {
-  const R = 6371; // Radius of the Earth in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c; // Distance in km
-};
-
-// Consultation services
-export const getConsultationsByPatient = async (patientId: string): Promise<Consultation[]> => {
-  const { data, error } = await supabase
-    .from('consultations')
-    .select('*')
-    .eq('patient_id', patientId)
-    .order('date', { ascending: false });
-  
-  if (error) {
-    console.error('Error fetching consultations:', error);
-    return [];
-  }
-  
-  return data as Consultation[];
-};
-
-export const createConsultation = async (consultation: Omit<Consultation, 'id'>): Promise<Consultation | null> => {
-  const { data, error } = await supabase
-    .from('consultations')
-    .insert([consultation])
-    .select()
-    .single();
-  
-  if (error) {
-    console.error('Error creating consultation:', error);
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching doctor:', error);
     return null;
   }
-  
-  return data as Consultation;
 };
 
-export const updateConsultationStatus = async (
-  id: number,
-  status: 'Scheduled' | 'Completed' | 'Cancelled'
-): Promise<boolean> => {
-  const { error } = await supabase
-    .from('consultations')
-    .update({ status })
-    .eq('id', id);
-  
-  if (error) {
-    console.error('Error updating consultation status:', error);
+// Mock data for initial development
+const mockDoctors: Doctor[] = [
+  {
+    id: '1',
+    name: 'Dr. Sarah Johnson',
+    specialty: 'Cardiology',
+    bio: 'Board-certified cardiologist with over 15 years of experience in treating heart conditions.',
+    education: ['Harvard Medical School', 'Johns Hopkins Residency'],
+    experience: 15,
+    languages: ['English', 'French', 'Arabic'],
+    certifications: ['American Board of Cardiology', 'Advanced Cardiac Life Support'],
+    avatar: '/doctor1.jpg',
+    rating: 4.8,
+    consultationFee: 120,
+    availableToday: true,
+    online: true,
+    lat: 33.5731,
+    lng: -7.5898,
+    address: 'Casablanca Medical Center, 123 Health St, Casablanca',
+    reviewCount: 128,
+    acceptingNewPatients: true,
+    insurances: ['CNOPS', 'CNSS', 'RMA'],
+    coordinates: [33.5731, -7.5898]
+  },
+  {
+    id: '2',
+    name: 'Dr. Mohammed Al-Fasi',
+    specialty: 'Pediatrics',
+    bio: 'Caring pediatrician dedicated to children's health and development.',
+    education: ['Rabat Medical University', 'Children\'s Hospital Fellowship'],
+    experience: 10,
+    languages: ['Arabic', 'French'],
+    certifications: ['Board of Pediatrics', 'Pediatric Advanced Life Support'],
+    avatar: '/doctor2.jpg',
+    rating: 4.9,
+    consultationFee: 90,
+    availableToday: true,
+    online: true,
+    lat: 33.5950,
+    lng: -7.6192,
+    address: 'Kids Care Clinic, 45 Child Ave, Casablanca',
+    reviewCount: 95,
+    acceptingNewPatients: true,
+    insurances: ['CNOPS', 'CNSS', 'AXA'],
+    coordinates: [33.5950, -7.6192]
+  },
+  {
+    id: '3',
+    name: 'Dr. Fatima Zahra',
+    specialty: 'Dermatology',
+    bio: 'Specialized in treating skin conditions with the latest techniques.',
+    education: ['Casablanca Medical School', 'Paris Dermatology Institute'],
+    experience: 8,
+    languages: ['Arabic', 'French', 'English'],
+    certifications: ['Board of Dermatology', 'Cosmetic Dermatology'],
+    avatar: '/doctor3.jpg',
+    rating: 4.7,
+    consultationFee: 150,
+    availableToday: false,
+    online: true,
+    lat: 34.0209,
+    lng: -6.8416,
+    address: 'Skin Health Center, 78 Beauty Rd, Rabat',
+    reviewCount: 76,
+    acceptingNewPatients: false,
+    insurances: ['CNSS', 'MAMDA', 'Allianz'],
+    coordinates: [34.0209, -6.8416]
+  },
+  {
+    id: '4',
+    name: 'Dr. Youssef Benzarti',
+    specialty: 'Orthopedics',
+    bio: 'Expert in joint replacements and sports injuries.',
+    education: ['Fes Medical University', 'Orthopedic Surgery Fellowship'],
+    experience: 12,
+    languages: ['Arabic', 'French'],
+    certifications: ['Board of Orthopedic Surgery', 'Sports Medicine'],
+    avatar: '/doctor4.jpg',
+    rating: 4.6,
+    consultationFee: 130,
+    availableToday: true,
+    online: false,
+    lat: 31.6295,
+    lng: -7.9811,
+    address: 'Motion Clinic, 32 Sports Blvd, Marrakech',
+    reviewCount: 102,
+    acceptingNewPatients: true,
+    insurances: ['CNOPS', 'RMA', 'MAMDA'],
+    coordinates: [31.6295, -7.9811]
+  },
+  {
+    id: '5',
+    name: 'Dr. Amina Tazi',
+    specialty: 'Psychiatry',
+    bio: 'Compassionate psychiatrist specializing in anxiety and depression treatment.',
+    education: ['Tangier Medical College', 'Mental Health Institute'],
+    experience: 9,
+    languages: ['Arabic', 'French', 'Spanish'],
+    certifications: ['Board of Psychiatry', 'Cognitive Behavioral Therapy'],
+    avatar: '/doctor5.jpg',
+    rating: 4.9,
+    consultationFee: 110,
+    availableToday: false,
+    online: true,
+    lat: 35.7595,
+    lng: -5.8340,
+    address: 'Mind Wellness Center, 14 Peace St, Tangier',
+    reviewCount: 68,
+    acceptingNewPatients: true,
+    insurances: ['CNSS', 'Allianz', 'Wafa Assurance'],
+    coordinates: [35.7595, -5.8340]
+  }
+];
+
+// Update a doctor's availability
+export const updateDoctorAvailability = async (doctorId: string, availableToday: boolean, online: boolean) => {
+  try {
+    const { error } = await supabase
+      .from('doctors')
+      .update({ availableToday, online })
+      .eq('id', doctorId);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating doctor availability:', error);
     return false;
   }
-  
-  return true;
 };
+
+// Add a new doctor
+export const addDoctor = async (doctor: Omit<Doctor, 'id'>) => {
+  try {
+    const { data, error } = await supabase
+      .from('doctors')
+      .insert([doctor])
+      .select();
+    
+    if (error) throw error;
+    
+    return data?.[0] || null;
+  } catch (error) {
+    console.error('Error adding doctor:', error);
+    return null;
+  }
+};
+
