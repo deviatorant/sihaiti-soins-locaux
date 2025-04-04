@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 
 // Define the Doctor interface
@@ -24,7 +25,7 @@ export interface Doctor {
   insurances: string[];
   coordinates: [number, number];
   availableSlots?: string[];
-  location?: string;
+  location?: string; // Added location field to match usage in Doctors.tsx
 }
 
 // Fetch all doctors

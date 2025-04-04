@@ -9,7 +9,7 @@ export type LanguageCode = 'en' | 'fr' | 'ar';
 type TranslationContextType = {
   language: LanguageCode;
   setLanguage: (lang: LanguageCode) => void;
-  t: (key: string, params?: Record<string, string>) => string;
+  t: (key: string) => string;
   isRTL: boolean;
 };
 
@@ -49,8 +49,8 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     updateUserLanguagePreference().catch(console.error);
   }, [language]);
 
-  // Translation function with optional parameter interpolation
-  const t = (key: string, params?: Record<string, string>): string => {
+  // Translation function
+  const t = (key: string): string => {
     const keys = key.split('.');
     let value: any = translationData[language];
     
@@ -61,13 +61,6 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         console.warn(`Translation key not found: ${key}`);
         return key.split('.').pop() || key;
       }
-    }
-    
-    // Handle string interpolation if params are provided
-    if (typeof value === 'string' && params) {
-      return Object.entries(params).reduce((acc, [paramKey, paramValue]) => {
-        return acc.replace(new RegExp(`{${paramKey}}`, 'g'), paramValue);
-      }, value);
     }
     
     return value;
