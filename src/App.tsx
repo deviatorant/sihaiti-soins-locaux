@@ -61,8 +61,8 @@ const AppSetup = ({ children }: { children: React.ReactNode }) => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <TranslationProvider>
+      <TranslationProvider>
+        <AuthProvider>
           <DoctorsProvider>
             <Toaster />
             <Sonner />
@@ -86,8 +86,8 @@ const App = () => (
               </AppSetup>
             </BrowserRouter>
           </DoctorsProvider>
-        </TranslationProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </TranslationProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

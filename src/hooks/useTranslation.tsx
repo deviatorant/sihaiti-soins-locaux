@@ -18,7 +18,7 @@ const TranslationContext = createContext<TranslationContextType | undefined>(und
 
 // Provider component
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize with browser language or default to English
+  // Initialize with browser language or default to French
   const [language, setLanguage] = useState<LanguageCode>(() => {
     const savedLang = localStorage.getItem('sihati_language');
     if (savedLang && ['en', 'fr', 'ar'].includes(savedLang)) {
@@ -26,11 +26,13 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
     
     const browserLang = navigator.language.split('-')[0];
-    return (browserLang === 'fr' || browserLang === 'ar') ? browserLang as LanguageCode : 'en';
+    // Default to French, unless explicitly set to English or Arabic
+    return (browserLang === 'en' || browserLang === 'ar') ? browserLang as LanguageCode : 'fr';
   });
   
   // Save language preference to both localStorage and Supabase if user is authenticated
   useEffect(() => {
+    console.log('Language set to:', language);
     localStorage.setItem('sihati_language', language);
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
