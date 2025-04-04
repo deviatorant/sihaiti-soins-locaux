@@ -33,7 +33,7 @@ const DoctorsContext = createContext<DoctorsContextType | undefined>(undefined);
 
 const useFuseSearch = (doctors: Doctor[], searchQuery: string): Doctor[] => {
   const fuse = new Fuse(doctors, {
-    keys: ['name', 'specialty', 'location'],
+    keys: ['name', 'specialty', 'address'],
     threshold: 0.3,
     ignoreLocation: true,
   });
@@ -53,6 +53,22 @@ export const DoctorsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [searchRadius, setSearchRadius] = useState(10); // 10km default radius
   const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'price'>('distance');
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  
+  // Helper function to calculate distance
+  const calculateDistance = (
+    lat1: number, lon1: number,
+    lat2: number, lon2: number
+  ): number => {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in km
+  };
   
   // Fetch doctors with React Query
   const { data: doctors = [], isLoading, error } = useQuery({
@@ -131,22 +147,6 @@ export const DoctorsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     searchRadius,
     sortBy
   ]);
-  
-  // Helper function to calculate distance
-  const calculateDistance = (
-    lat1: number, lon1: number,
-    lat2: number, lon2: number
-  ): number => {
-    const R = 6371; // Radius of the Earth in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; // Distance in km
-  };
   
   return (
     <DoctorsContext.Provider

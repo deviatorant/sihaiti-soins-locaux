@@ -30,6 +30,15 @@ import DoctorProfileModal from "@/components/DoctorProfileModal";
 import { useNavigate } from "react-router-dom";
 import { useGeolocation } from "@/hooks/useGeolocation";
 
+// Define the extended Doctor interface that includes UI-specific properties
+interface UIDoctor extends Omit<import('@/services/database').Doctor, 'id'> {
+  id: string; // Keep as string to match the database
+  location?: string; // Optional UI property
+  availableSlots?: string[]; // Optional UI property
+  reviews?: number; // Optional UI property
+  verified?: boolean; // Optional UI property
+}
+
 const Doctors = () => {
   const { t, isRTL } = useTranslation();
   const { user } = useAuth();
@@ -74,8 +83,8 @@ const Doctors = () => {
     }
   }, [selectedDoctor]);
   
-  const handleDoctorClick = (doctor: any) => {
-    setSelectedDoctor(doctor);
+  const handleDoctorClick = (doctor: UIDoctor) => {
+    setSelectedDoctor(doctor as any);
   };
   
   const handleCloseModal = () => {
@@ -83,7 +92,7 @@ const Doctors = () => {
     setIsModalOpen(false);
   };
   
-  const handleBookAppointment = (doctorId: number) => {
+  const handleBookAppointment = (doctorId: string) => {
     if (!user) {
       toast({
         title: t('login.loginRequired'),
@@ -97,7 +106,7 @@ const Doctors = () => {
     navigate(`/appointments?doctor=${doctorId}`);
   };
   
-  const handleCallDoctor = (doctorId: number) => {
+  const handleCallDoctor = (doctorId: string) => {
     if (!user) {
       toast({
         title: t('login.loginRequired'),
@@ -115,7 +124,7 @@ const Doctors = () => {
     });
   };
   
-  const handleVideoConsult = (doctorId: number) => {
+  const handleVideoConsult = (doctorId: string) => {
     if (!user) {
       toast({
         title: t('login.loginRequired'),
@@ -129,7 +138,7 @@ const Doctors = () => {
     navigate(`/teleconsultation?doctor=${doctorId}`);
   };
   
-  const renderDoctorCard = (doctor: any) => (
+  const renderDoctorCard = (doctor: UIDoctor) => (
     <Card 
       key={doctor.id} 
       className="mb-4 overflow-hidden hover:shadow-md transition-shadow"
@@ -145,7 +154,7 @@ const Doctors = () => {
             <div className="flex items-center mt-1">
               <Star className="h-4 w-4 text-yellow-400 mr-1" />
               <span className="font-semibold">{doctor.rating}</span>
-              <span className="text-gray-500 text-sm ml-1">({doctor.reviews})</span>
+              <span className="text-gray-500 text-sm ml-1">({doctor.reviewCount})</span>
             </div>
             
             {doctor.verified && (
@@ -167,7 +176,7 @@ const Doctors = () => {
             
             <div className="flex items-center mt-2">
               <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-              <span className="text-sm text-gray-600">{doctor.location}</span>
+              <span className="text-sm text-gray-600">{doctor.address}</span>
             </div>
             
             {doctor.distance !== undefined && (
@@ -186,12 +195,12 @@ const Doctors = () => {
             
             <div className="mt-3">
               <p className="text-sm font-medium">{t('doctors.education')}</p>
-              <p className="text-sm text-gray-600">{doctor.education}</p>
+              <p className="text-sm text-gray-600">{doctor.education.join(', ')}</p>
             </div>
             
             <div className="mt-2">
               <p className="text-sm font-medium">{t('doctors.experience')}</p>
-              <p className="text-sm text-gray-600">{doctor.experience}</p>
+              <p className="text-sm text-gray-600">{doctor.experience} {t('doctors.years')}</p>
             </div>
           </div>
           
