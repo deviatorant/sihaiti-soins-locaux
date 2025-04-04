@@ -26,7 +26,6 @@ const Teleconsultation = () => {
   const [messages, setMessages] = useState<{sender: string, text: string, time: string}[]>([]);
   const [newMessage, setNewMessage] = useState('');
   
-  // Find the doctor from the URL parameter
   useEffect(() => {
     if (doctorId && doctors.length > 0) {
       const doctor = doctors.find(d => d.id === doctorId);
@@ -36,7 +35,6 @@ const Teleconsultation = () => {
     }
   }, [doctorId, doctors, setSelectedDoctor]);
   
-  // Simulate connection to the doctor
   const handleConnect = () => {
     if (!selectedDoctor) {
       toast({
@@ -49,12 +47,10 @@ const Teleconsultation = () => {
     
     setIsConnecting(true);
     
-    // Simulate connection delay
     setTimeout(() => {
       setIsConnecting(false);
       setIsConnected(true);
       
-      // Add welcome message
       setMessages([
         {
           sender: selectedDoctor.name,
@@ -104,7 +100,6 @@ const Teleconsultation = () => {
     setMessages([...messages, userMessage]);
     setNewMessage('');
     
-    // Simulate doctor response after a delay
     setTimeout(() => {
       const doctorMessage = {
         sender: selectedDoctor?.name || t('teleconsultation.doctor'),
@@ -145,7 +140,6 @@ const Teleconsultation = () => {
                           </div>
                         )}
                         
-                        {/* User video thumbnail */}
                         <div className="absolute bottom-4 right-4 w-32 h-24 bg-gray-700 rounded overflow-hidden border-2 border-white">
                           <div className="absolute inset-0 flex items-center justify-center">
                             {isVideoOn ? (
