@@ -1,647 +1,558 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useGeolocation } from "@/hooks/useGeolocation";
+import { useAuth } from "@/hooks/useAuth";
+import { useDoctors } from "@/hooks/useDoctors";
 import NavBar from "@/components/NavBar";
-import LocationMap from "@/components/LocationMap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
-import { MapPin, Search, Star, Clock, Filter, Calendar, Phone, Video } from "lucide-react";
-import Fuse from 'fuse.js';
-
-// Mock data
-const doctorsData = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    specialty: "Cardiologist",
-    languages: ["Arabic", "French", "English"],
-    location: "Casablanca",
-    address: "123 Medical Center, Casablanca",
-    rating: 4.9,
-    reviewCount: 145,
-    availableToday: true,
-    acceptingNewPatients: true,
-    education: "Harvard Medical School",
-    experience: "15 years",
-    avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-    insurances: ["CNOPS", "CNSS", "RMA"],
-    coordinates: { lat: 33.5992, lng: -7.6201 },
-    distance: 0, // Will be calculated based on user location
-    availableSlots: [
-      { date: "2025-04-05", slots: ["09:00", "11:30", "14:00"] },
-      { date: "2025-04-06", slots: ["10:00", "15:30"] },
-    ]
-  },
-  {
-    id: 2,
-    name: "Dr. Mohammed Al-Fassi",
-    specialty: "Pediatrician",
-    languages: ["Arabic", "French"],
-    location: "Rabat",
-    address: "456 Children's Clinic, Rabat",
-    rating: 4.8,
-    reviewCount: 120,
-    availableToday: false,
-    acceptingNewPatients: true,
-    education: "Université de Rabat",
-    experience: "10 years",
-    avatar: "https://randomuser.me/api/portraits/men/42.jpg",
-    insurances: ["CNSS", "Saham Assurance"],
-    coordinates: { lat: 34.0209, lng: -6.8416 },
-    distance: 0,
-    availableSlots: [
-      { date: "2025-04-06", slots: ["14:00", "16:30"] },
-      { date: "2025-04-07", slots: ["09:30", "11:00", "15:00"] },
-    ]
-  },
-  {
-    id: 3,
-    name: "Dr. Fatima Benali",
-    specialty: "Dermatologist",
-    languages: ["Arabic", "French", "English"],
-    location: "Marrakech",
-    address: "789 Skin Health Center, Marrakech",
-    rating: 4.7,
-    reviewCount: 98,
-    availableToday: true,
-    acceptingNewPatients: true,
-    education: "Université de Casablanca",
-    experience: "8 years",
-    avatar: "https://randomuser.me/api/portraits/women/33.jpg",
-    insurances: ["CNOPS", "Wafa Assurance"],
-    coordinates: { lat: 31.6295, lng: -7.9811 },
-    distance: 0,
-    availableSlots: [
-      { date: "2025-04-05", slots: ["10:30", "13:00", "16:00"] },
-      { date: "2025-04-08", slots: ["09:00", "14:30"] },
-    ]
-  },
-  {
-    id: 4,
-    name: "Dr. Karim Idrissi",
-    specialty: "General Practitioner",
-    languages: ["Arabic", "French", "Amazigh"],
-    location: "Agadir",
-    address: "101 Family Health, Agadir",
-    rating: 4.6,
-    reviewCount: 85,
-    availableToday: true,
-    acceptingNewPatients: false,
-    education: "Université Mohammed V",
-    experience: "12 years",
-    avatar: "https://randomuser.me/api/portraits/men/76.jpg",
-    insurances: ["CNSS", "MGEN"],
-    coordinates: { lat: 30.4278, lng: -9.5982 },
-    distance: 0,
-    availableSlots: [
-      { date: "2025-04-05", slots: ["08:30", "11:00", "15:30"] },
-      { date: "2025-04-07", slots: ["10:00", "13:30", "16:00"] },
-    ]
-  },
-  {
-    id: 5,
-    name: "Dr. Leila Tazi",
-    specialty: "Gynecologist",
-    languages: ["Arabic", "French"],
-    location: "Casablanca",
-    address: "202 Women's Health Clinic, Casablanca",
-    rating: 4.9,
-    reviewCount: 156,
-    availableToday: false,
-    acceptingNewPatients: true,
-    education: "McGill University",
-    experience: "14 years",
-    avatar: "https://randomuser.me/api/portraits/women/45.jpg",
-    insurances: ["CNOPS", "CNSS", "Axa Assurance"],
-    coordinates: { lat: 33.5731, lng: -7.5898 },
-    distance: 0,
-    availableSlots: [
-      { date: "2025-04-06", slots: ["09:00", "11:30", "14:00"] },
-      { date: "2025-04-07", slots: ["10:00", "15:30"] },
-    ]
-  }
-];
-
-// Available specialties
-const specialties = [
-  "All Specialties",
-  "Cardiologist",
-  "Dermatologist",
-  "General Practitioner",
-  "Gynecologist",
-  "Neurologist",
-  "Ophthalmologist",
-  "Pediatrician",
-  "Psychiatrist",
-  "Urologist"
-];
-
-// Available languages
-const languages = ["Arabic", "French", "English", "Amazigh", "Spanish"];
-
-// Available insurances
-const insurances = ["CNOPS", "CNSS", "RMA", "Saham Assurance", "Wafa Assurance", "Axa Assurance", "MGEN"];
+import { 
+  Search, 
+  MapPin, 
+  Star, 
+  Calendar, 
+  Phone, 
+  Video, 
+  Filter, 
+  Bookmark,
+  User,
+  LocateFixed
+} from "lucide-react";
+import DoctorProfileModal from "@/components/DoctorProfileModal";
+import { useNavigate } from "react-router-dom";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 const Doctors = () => {
   const { t, isRTL } = useTranslation();
-  const { position, getPosition, error: geoError } = useGeolocation();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { 
+    filteredDoctors, 
+    isLoading,
+    searchQuery, 
+    setSearchQuery,
+    filterBySpecialty,
+    setFilterBySpecialty,
+    filterByLanguage,
+    setFilterByLanguage,
+    showOnlineOnly,
+    setShowOnlineOnly,
+    showAvailableTodayOnly,
+    setShowAvailableTodayOnly,
+    searchRadius,
+    setSearchRadius,
+    sortBy,
+    setSortBy,
+    selectedDoctor,
+    setSelectedDoctor
+  } = useDoctors();
+  const { position, getPosition, positionError } = useGeolocation();
   
-  // State for filters
-  const [searchQuery, setSearchQuery] = useState("");
-  const [specialty, setSpecialty] = useState("All Specialties");
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-  const [selectedInsurances, setSelectedInsurances] = useState<string[]>([]);
-  const [maxDistance, setMaxDistance] = useState(30); // in kilometers
-  const [showAvailableToday, setShowAvailableToday] = useState(false);
-  const [showAcceptingNew, setShowAcceptingNew] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // State for doctors data
-  const [doctors, setDoctors] = useState(doctorsData);
-  const [filteredDoctors, setFilteredDoctors] = useState(doctorsData);
-  
-  // Set up fuse.js for fuzzy search
-  const fuseOptions = {
-    keys: ['name', 'specialty', 'location', 'languages', 'insurances'],
-    threshold: 0.3
-  };
-  const fuse = new Fuse(doctors, fuseOptions);
-  
-  // Calculate distances when position changes
+  // Trigger getPosition when component mounts
   useEffect(() => {
-    if (position) {
-      // Calculate distance for each doctor
-      const doctorsWithDistance = doctors.map(doctor => {
-        const distance = calculateDistance(
-          position.latitude,
-          position.longitude,
-          doctor.coordinates.lat,
-          doctor.coordinates.lng
-        );
-        return { ...doctor, distance };
-      });
-      
-      // Sort by distance
-      doctorsWithDistance.sort((a, b) => a.distance - b.distance);
-      
-      setDoctors(doctorsWithDistance);
-    }
-  }, [position]);
+    getPosition();
+  }, []);
   
-  // Function to calculate distance between two coordinates (Haversine formula)
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Radius of the earth in km
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2); 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    const distance = R * c; // Distance in km
-    return parseFloat(distance.toFixed(1));
-  };
-  
-  const deg2rad = (deg: number): number => {
-    return deg * (Math.PI/180);
-  };
-  
-  // Request user location
-  const handleGetLocation = () => {
-    getPosition()
-      .then(() => {
-        toast({
-          title: "Location found",
-          description: "We've found your location and updated doctor distances.",
-          variant: "default",
-        });
-      })
-      .catch((err) => {
-        toast({
-          title: "Location error",
-          description: err.message,
-          variant: "destructive",
-        });
-      });
-  };
-  
-  // Filter doctors based on all criteria
+  // Open doctor profile modal when a doctor is selected
   useEffect(() => {
-    let results = [...doctors];
-    
-    // Apply search query if any
-    if (searchQuery) {
-      const fuseResults = fuse.search(searchQuery);
-      results = fuseResults.map(result => result.item);
+    if (selectedDoctor) {
+      setIsModalOpen(true);
+    } else {
+      setIsModalOpen(false);
     }
-    
-    // Apply specialty filter
-    if (specialty !== "All Specialties") {
-      results = results.filter(doctor => doctor.specialty === specialty);
-    }
-    
-    // Apply language filter
-    if (selectedLanguages.length > 0) {
-      results = results.filter(doctor => 
-        selectedLanguages.every(lang => doctor.languages.includes(lang))
-      );
-    }
-    
-    // Apply insurance filter
-    if (selectedInsurances.length > 0) {
-      results = results.filter(doctor => 
-        selectedInsurances.some(ins => doctor.insurances.includes(ins))
-      );
-    }
-    
-    // Apply distance filter if location is available
-    if (position) {
-      results = results.filter(doctor => doctor.distance <= maxDistance);
-    }
-    
-    // Apply availability filters
-    if (showAvailableToday) {
-      results = results.filter(doctor => doctor.availableToday);
-    }
-    
-    if (showAcceptingNew) {
-      results = results.filter(doctor => doctor.acceptingNewPatients);
-    }
-    
-    setFilteredDoctors(results);
-  }, [searchQuery, specialty, selectedLanguages, selectedInsurances, maxDistance, showAvailableToday, showAcceptingNew, doctors, position]);
+  }, [selectedDoctor]);
   
-  // Toggle language selection
-  const toggleLanguage = (language: string) => {
-    setSelectedLanguages(prev => 
-      prev.includes(language)
-        ? prev.filter(lang => lang !== language)
-        : [...prev, language]
-    );
+  const handleDoctorClick = (doctor: any) => {
+    setSelectedDoctor(doctor);
   };
   
-  // Toggle insurance selection
-  const toggleInsurance = (insurance: string) => {
-    setSelectedInsurances(prev => 
-      prev.includes(insurance)
-        ? prev.filter(ins => ins !== insurance)
-        : [...prev, insurance]
-    );
+  const handleCloseModal = () => {
+    setSelectedDoctor(null);
+    setIsModalOpen(false);
   };
   
-  // Reset all filters
-  const resetFilters = () => {
-    setSearchQuery("");
-    setSpecialty("All Specialties");
-    setSelectedLanguages([]);
-    setSelectedInsurances([]);
-    setMaxDistance(30);
-    setShowAvailableToday(false);
-    setShowAcceptingNew(false);
-  };
-  
-  // Book an appointment with a doctor
   const handleBookAppointment = (doctorId: number) => {
-    const doctor = doctors.find(d => d.id === doctorId);
-    
-    if (doctor) {
+    if (!user) {
       toast({
-        title: "Appointment Requested",
-        description: `We're scheduling your appointment with ${doctor.name}.`,
-        variant: "default",
+        title: t('login.loginRequired'),
+        description: t('login.loginToBook'),
+        variant: "destructive",
       });
+      navigate("/login");
+      return;
     }
+    
+    navigate(`/appointments?doctor=${doctorId}`);
   };
   
-  // Call a doctor
   const handleCallDoctor = (doctorId: number) => {
-    const doctor = doctors.find(d => d.id === doctorId);
-    
-    if (doctor) {
-      // In a real app, this would initiate a call
-      console.log(`Calling ${doctor.name}...`);
+    if (!user) {
       toast({
-        title: "Initiating Call",
-        description: `Connecting to ${doctor.name}...`,
-        variant: "default",
+        title: t('login.loginRequired'),
+        description: t('login.loginToCall'),
+        variant: "destructive",
       });
+      navigate("/login");
+      return;
     }
+    
+    toast({
+      title: t('doctors.callingDoctor'),
+      description: t('doctors.connectingCall'),
+      variant: "default",
+    });
   };
+  
+  const handleVideoConsult = (doctorId: number) => {
+    if (!user) {
+      toast({
+        title: t('login.loginRequired'),
+        description: t('login.loginToVideoConsult'),
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+    
+    navigate(`/teleconsultation?doctor=${doctorId}`);
+  };
+  
+  const renderDoctorCard = (doctor: any) => (
+    <Card 
+      key={doctor.id} 
+      className="mb-4 overflow-hidden hover:shadow-md transition-shadow"
+      onClick={() => handleDoctorClick(doctor)}
+    >
+      <CardContent className="p-0">
+        <div className="flex flex-col md:flex-row">
+          <div className="p-4 md:w-1/4 flex flex-col items-center">
+            <Avatar className="h-24 w-24 mb-2">
+              <img src={doctor.avatar} alt={doctor.name} />
+            </Avatar>
+            
+            <div className="flex items-center mt-1">
+              <Star className="h-4 w-4 text-yellow-400 mr-1" />
+              <span className="font-semibold">{doctor.rating}</span>
+              <span className="text-gray-500 text-sm ml-1">({doctor.reviews})</span>
+            </div>
+            
+            {doctor.verified && (
+              <Badge variant="outline" className="mt-2 border-blue-500 text-blue-500">
+                {t('doctors.verified')}
+              </Badge>
+            )}
+            
+            {doctor.availableToday && (
+              <Badge className="mt-2 bg-green-500 hover:bg-green-600">
+                {t('doctors.availableToday')}
+              </Badge>
+            )}
+          </div>
+          
+          <div className="p-4 md:w-2/4 border-t md:border-t-0 md:border-l border-r-0 md:border-r border-gray-200">
+            <h3 className="text-lg font-semibold">{doctor.name}</h3>
+            <p className="text-gray-500">{doctor.specialty}</p>
+            
+            <div className="flex items-center mt-2">
+              <MapPin className="h-4 w-4 text-gray-400 mr-1" />
+              <span className="text-sm text-gray-600">{doctor.location}</span>
+            </div>
+            
+            {doctor.distance !== undefined && (
+              <p className="text-sm text-gray-500 mt-1">
+                {doctor.distance.toFixed(1)} km {t('doctors.fromYou')}
+              </p>
+            )}
+            
+            <div className="flex flex-wrap gap-1 mt-3">
+              {doctor.languages.map((lang: string, idx: number) => (
+                <Badge key={idx} variant="secondary" className="bg-gray-100">
+                  {lang}
+                </Badge>
+              ))}
+            </div>
+            
+            <div className="mt-3">
+              <p className="text-sm font-medium">{t('doctors.education')}</p>
+              <p className="text-sm text-gray-600">{doctor.education}</p>
+            </div>
+            
+            <div className="mt-2">
+              <p className="text-sm font-medium">{t('doctors.experience')}</p>
+              <p className="text-sm text-gray-600">{doctor.experience}</p>
+            </div>
+          </div>
+          
+          <div className="p-4 md:w-1/4 bg-gray-50 flex flex-col justify-between">
+            <div>
+              <p className="text-sm font-medium">{t('doctors.consultationFee')}</p>
+              <p className="text-lg font-bold text-medical-blue">{doctor.consultationFee} MAD</p>
+            </div>
+            
+            <div className="space-y-2 mt-4">
+              <Button
+                className="w-full bg-medical-blue hover:bg-medical-blue/90"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleBookAppointment(doctor.id);
+                }}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                {t('doctors.bookAppointment')}
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCallDoctor(doctor.id);
+                }}
+              >
+                <Phone className="mr-2 h-4 w-4" />
+                {t('doctors.callDoctor')}
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleVideoConsult(doctor.id);
+                }}
+              >
+                <Video className="mr-2 h-4 w-4" />
+                {t('doctors.videoConsult')}
+              </Button>
+            </div>
+            
+            {doctor.availableToday && doctor.availableSlots && doctor.availableSlots.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-medium mb-2">{t('doctors.todaySlots')}</p>
+                <div className="flex flex-wrap gap-1">
+                  {doctor.availableSlots.slice(0, 3).map((slot: string, idx: number) => (
+                    <Badge key={idx} variant="outline" className="bg-white">
+                      {slot}
+                    </Badge>
+                  ))}
+                  {doctor.availableSlots.length > 3 && (
+                    <Badge variant="outline" className="bg-white">
+                      +{doctor.availableSlots.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
   
   return (
     <div className={`min-h-screen bg-gray-50 ${isRTL ? 'rtl' : 'ltr'}`}>
       <NavBar />
       
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6 text-center text-medical-blue">
-          {t('doctors.findDoctor')}
-        </h1>
+      <main className="container mx-auto px-4 py-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{t('doctors.title')}</h1>
+            <p className="text-gray-500">
+              {filteredDoctors.length} {t('doctors.resultsFound')}
+            </p>
+          </div>
+          
+          <div className="flex mt-4 md:mt-0">
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              className="mr-2"
+              onClick={() => setViewMode("list")}
+            >
+              {t('doctors.listView')}
+            </Button>
+            <Button
+              variant={viewMode === "map" ? "default" : "outline"}
+              onClick={() => setViewMode("map")}
+            >
+              {t('doctors.mapView')}
+            </Button>
+          </div>
+        </div>
         
-        {/* Search and filter section */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Filters sidebar */}
+          <div className={`${isFiltersOpen ? 'block' : 'hidden md:block'} md:w-1/4 bg-white p-4 rounded-lg shadow-sm`}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-semibold text-lg">{t('doctors.filters')}</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="md:hidden"
+                onClick={() => setIsFiltersOpen(false)}
+              >
+                {t('common.close')}
+              </Button>
+            </div>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t('doctors.specialty')}
+                </label>
+                <Select value={filterBySpecialty} onValueChange={setFilterBySpecialty}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('doctors.allSpecialties')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('doctors.allSpecialties')}</SelectItem>
+                    <SelectItem value="General Practitioner">{t('doctors.generalPractitioner')}</SelectItem>
+                    <SelectItem value="Pediatrician">{t('doctors.pediatrician')}</SelectItem>
+                    <SelectItem value="Cardiologist">{t('doctors.cardiologist')}</SelectItem>
+                    <SelectItem value="Dermatologist">{t('doctors.dermatologist')}</SelectItem>
+                    <SelectItem value="Gynecologist">{t('doctors.gynecologist')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t('doctors.language')}
+                </label>
+                <Select value={filterByLanguage} onValueChange={setFilterByLanguage}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('doctors.allLanguages')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('doctors.allLanguages')}</SelectItem>
+                    <SelectItem value="Arabic">{t('doctors.arabic')}</SelectItem>
+                    <SelectItem value="French">{t('doctors.french')}</SelectItem>
+                    <SelectItem value="English">{t('doctors.english')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t('doctors.distance')}
+                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-500">0 km</span>
+                  <span className="text-sm text-gray-500">{searchRadius} km</span>
+                </div>
+                <Slider
+                  value={[searchRadius]}
+                  min={1}
+                  max={50}
+                  step={1}
+                  onValueChange={(values) => setSearchRadius(values[0])}
+                  className="mb-2"
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-xs"
+                  onClick={getPosition}
+                >
+                  <LocateFixed className="mr-1 h-3 w-3" />
+                  {t('doctors.useMyLocation')}
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="online-only" className="text-sm font-medium">
+                    {t('doctors.onlineOnly')}
+                  </label>
+                  <Switch
+                    id="online-only"
+                    checked={showOnlineOnly}
+                    onCheckedChange={setShowOnlineOnly}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <label htmlFor="available-today" className="text-sm font-medium">
+                    {t('doctors.availableTodayOnly')}
+                  </label>
+                  <Switch
+                    id="available-today"
+                    checked={showAvailableTodayOnly}
+                    onCheckedChange={setShowAvailableTodayOnly}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t('doctors.sortBy')}
+                </label>
+                <Select value={sortBy} onValueChange={value => setSortBy(value as any)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('doctors.sortBy')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="distance">{t('doctors.distance')}</SelectItem>
+                    <SelectItem value="rating">{t('doctors.rating')}</SelectItem>
+                    <SelectItem value="price">{t('doctors.price')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          
+          {/* Main content */}
+          <div className="flex-1">
+            <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
-                  type="text"
-                  placeholder={t('doctors.searchPlaceholder')}
-                  className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('doctors.searchPlaceholder')}
+                  className="pl-10"
                 />
               </div>
               
-              <div className="flex-shrink-0">
-                <Button 
-                  onClick={handleGetLocation}
-                  className="w-full md:w-auto"
-                  variant="outline"
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  {t('doctors.useLocation')}
-                </Button>
-              </div>
-            </div>
-            
-            <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="basic">{t('doctors.basicFilters')}</TabsTrigger>
-                <TabsTrigger value="advanced">{t('doctors.advancedFilters')}</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="basic">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <Label>{t('doctors.specialty')}</Label>
-                    <Select 
-                      value={specialty} 
-                      onValueChange={setSpecialty}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {filterBySpecialty !== 'all' && (
+                  <Badge variant="secondary" className="bg-gray-100">
+                    {filterBySpecialty}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => setFilterBySpecialty('all')}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('doctors.selectSpecialty')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {specialties.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label>{t('doctors.maxDistance')}</Label>
-                    <div className="flex items-center mt-2">
-                      <Slider
-                        value={[maxDistance]}
-                        min={1}
-                        max={100}
-                        step={1}
-                        onValueChange={(vals) => setMaxDistance(vals[0])}
-                        disabled={!position}
-                        className="flex-1 mr-4"
-                      />
-                      <span className="w-16 text-right">{maxDistance} km</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col justify-end">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Switch
-                        id="available-today"
-                        checked={showAvailableToday}
-                        onCheckedChange={setShowAvailableToday}
-                      />
-                      <Label htmlFor="available-today">{t('doctors.availableToday')}</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="accepting-new"
-                        checked={showAcceptingNew}
-                        onCheckedChange={setShowAcceptingNew}
-                      />
-                      <Label htmlFor="accepting-new">{t('doctors.acceptingNewPatients')}</Label>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="advanced">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                  <div>
-                    <Label className="mb-2 block">{t('doctors.languages')}</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {languages.map((language) => (
-                        <Badge
-                          key={language}
-                          variant={selectedLanguages.includes(language) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => toggleLanguage(language)}
-                        >
-                          {language}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label className="mb-2 block">{t('doctors.insurances')}</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {insurances.map((insurance) => (
-                        <Badge
-                          key={insurance}
-                          variant={selectedInsurances.includes(insurance) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => toggleInsurance(insurance)}
-                        >
-                          {insurance}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-            
-            <div className="flex justify-between items-center mt-4">
-              <Button 
-                variant="outline" 
-                onClick={resetFilters}
-              >
-                {t('doctors.resetFilters')}
-              </Button>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                >
-                  {t('doctors.listView')}
-                </Button>
-                <Button
-                  variant={viewMode === "map" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("map")}
-                >
-                  {t('doctors.mapView')}
-                </Button>
+                      &times;
+                    </Button>
+                  </Badge>
+                )}
+                
+                {filterByLanguage !== 'all' && (
+                  <Badge variant="secondary" className="bg-gray-100">
+                    {filterByLanguage}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => setFilterByLanguage('all')}
+                    >
+                      &times;
+                    </Button>
+                  </Badge>
+                )}
+                
+                {showOnlineOnly && (
+                  <Badge variant="secondary" className="bg-gray-100">
+                    {t('doctors.onlineOnly')}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => setShowOnlineOnly(false)}
+                    >
+                      &times;
+                    </Button>
+                  </Badge>
+                )}
+                
+                {showAvailableTodayOnly && (
+                  <Badge variant="secondary" className="bg-gray-100">
+                    {t('doctors.availableTodayOnly')}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => setShowAvailableTodayOnly(false)}
+                    >
+                      &times;
+                    </Button>
+                  </Badge>
+                )}
               </div>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-3 md:hidden"
+                onClick={() => setIsFiltersOpen(true)}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                {t('doctors.showFilters')}
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Results section */}
-        <div className="mb-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">
-            {filteredDoctors.length} {t('doctors.resultsFound')}
-          </h2>
-          
-          {position && (
-            <div className="text-sm text-gray-500">
-              <MapPin className="inline-block h-4 w-4 mr-1" />
-              {t('doctors.sortedByDistance')}
-            </div>
-          )}
-        </div>
-        
-        {/* View modes */}
-        {viewMode === "list" ? (
-          <div className="space-y-4">
-            {filteredDoctors.length > 0 ? (
-              filteredDoctors.map((doctor) => (
-                <Card key={doctor.id} className="hover:shadow-md transition-shadow">
+            
+            <Tabs defaultValue={viewMode} onValueChange={(value) => setViewMode(value as "list" | "map")}>
+              <TabsContent value="list" className="space-y-4">
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <Card key={index} className="mb-4">
+                      <CardContent className="p-4">
+                        <div className="flex animate-pulse">
+                          <div className="w-1/4 flex justify-center">
+                            <div className="h-24 w-24 bg-gray-200 rounded-full"></div>
+                          </div>
+                          <div className="w-3/4 space-y-3">
+                            <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : filteredDoctors.length > 0 ? (
+                  filteredDoctors.map(renderDoctorCard)
+                ) : (
+                  <div className="text-center py-10">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <User className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium">{t('doctors.noResults')}</h3>
+                    <p className="text-gray-500">{t('doctors.tryDifferentFilters')}</p>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="map">
+                <Card>
                   <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-start gap-4">
-                      <div className="md:w-1/4 flex flex-col items-center">
-                        <Avatar className="h-24 w-24 mb-2">
-                          <img src={doctor.avatar} alt={doctor.name} />
-                        </Avatar>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                          <span className="font-medium">{doctor.rating}</span>
-                          <span className="text-sm text-gray-500 ml-1">({doctor.reviewCount})</span>
-                        </div>
-                        {doctor.availableToday && (
-                          <Badge className="mt-2 bg-green-500">
-                            {t('doctors.availableToday')}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="md:w-2/4">
-                        <h3 className="text-lg font-semibold">{doctor.name}</h3>
-                        <p className="text-gray-600">{doctor.specialty}</p>
-                        
-                        <div className="mt-2 flex items-start gap-1">
-                          <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
-                          <div>
-                            <p className="text-sm">{doctor.address}</p>
-                            {position && (
-                              <p className="text-sm text-gray-500">
-                                {doctor.distance} km {t('doctors.fromYou')}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="mt-3 flex flex-wrap gap-1">
-                          {doctor.languages.map((lang) => (
-                            <Badge key={lang} variant="outline" className="text-xs">
-                              {lang}
-                            </Badge>
-                          ))}
-                        </div>
-                        
-                        <div className="mt-2">
-                          <p className="text-sm">
-                            <span className="font-medium">{t('doctors.education')}:</span> {doctor.education}
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">{t('doctors.experience')}:</span> {doctor.experience}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="md:w-1/4 flex flex-col gap-2">
-                        <Button 
-                          className="w-full bg-medical-blue hover:bg-medical-blue/90"
-                          onClick={() => handleBookAppointment(doctor.id)}
-                        >
-                          <Calendar className="mr-2 h-4 w-4" />
-                          {t('doctors.bookAppointment')}
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={() => handleCallDoctor(doctor.id)}
-                        >
-                          <Phone className="mr-2 h-4 w-4" />
-                          {t('doctors.callDoctor')}
-                        </Button>
-                        
-                        <Button variant="outline" className="w-full">
-                          <Video className="mr-2 h-4 w-4" />
-                          {t('doctors.videoConsult')}
-                        </Button>
-                        
-                        {doctor.availableToday && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium text-green-600">{t('doctors.todaySlots')}</p>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {doctor.availableSlots[0].slots.map((slot) => (
-                                <Badge
-                                  key={slot}
-                                  variant="outline"
-                                  className="cursor-pointer hover:bg-green-50"
-                                >
-                                  {slot}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                    <div className="rounded overflow-hidden bg-gray-100 flex items-center justify-center" style={{ height: "500px" }}>
+                      <p className="text-gray-500">
+                        {t('doctors.mapViewComingSoon')}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">{t('doctors.noResults')}</h3>
-                <p className="text-gray-500 mt-1">{t('doctors.tryDifferentFilters')}</p>
-                <Button onClick={resetFilters} className="mt-4">
-                  {t('doctors.resetFilters')}
-                </Button>
-              </div>
-            )}
+              </TabsContent>
+            </Tabs>
           </div>
-        ) : (
-          <div className="h-[600px] rounded-lg overflow-hidden">
-            <LocationMap />
-            <div className="mt-2 text-center text-sm text-gray-500">
-              {t('doctors.mapViewDescription')}
-            </div>
-          </div>
-        )}
+        </div>
       </main>
+      
+      {selectedDoctor && (
+        <DoctorProfileModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          doctor={selectedDoctor}
+          onBookAppointment={() => handleBookAppointment(selectedDoctor.id)}
+          onCallDoctor={() => handleCallDoctor(selectedDoctor.id)}
+          onVideoConsult={() => handleVideoConsult(selectedDoctor.id)}
+        />
+      )}
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,71 +29,7 @@ import {
   Calendar as CalendarIcon,
   Star,
 } from "lucide-react";
-
-// Mock data for doctors
-const doctors = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    specialty: "General Practitioner",
-    languages: ["Arabic", "French", "English"],
-    rating: 4.9,
-    reviews: 127,
-    online: true,
-    avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-    hourlyRate: 250
-  },
-  {
-    id: 2,
-    name: "Dr. Mohammed Alami",
-    specialty: "Pediatrician",
-    languages: ["Arabic", "French"],
-    rating: 4.8,
-    reviews: 98,
-    online: true,
-    avatar: "https://randomuser.me/api/portraits/men/42.jpg",
-    hourlyRate: 300
-  },
-  {
-    id: 3,
-    name: "Dr. Fatima Benani",
-    specialty: "Cardiologist",
-    languages: ["Arabic", "French", "English"],
-    rating: 4.7,
-    reviews: 75,
-    online: false,
-    avatar: "https://randomuser.me/api/portraits/women/33.jpg",
-    hourlyRate: 350
-  }
-];
-
-// Mock data for past consultations
-const pastConsultations = [
-  {
-    id: 1,
-    doctorName: "Dr. Sarah Johnson",
-    specialty: "General Practitioner",
-    date: "2025-03-15",
-    time: "14:30",
-    type: "Video",
-    duration: "25 min",
-    avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-    summary: "Common cold, prescribed rest and paracetamol",
-    documents: ["Prescription_20250315.pdf"]
-  },
-  {
-    id: 2,
-    doctorName: "Dr. Mohammed Alami",
-    specialty: "Pediatrician",
-    date: "2025-02-28",
-    time: "10:00",
-    type: "Chat",
-    duration: "15 min",
-    avatar: "https://randomuser.me/api/portraits/men/42.jpg",
-    summary: "Dietary advice for child with allergies",
-    documents: ["Diet_Plan_20250228.pdf", "Allergy_Test_Results.pdf"]
-  }
-];
+import { safeElementClick } from "@/utils/domHelpers";
 
 const Teleconsultation = () => {
   const { t, isRTL } = useTranslation();
@@ -108,13 +43,11 @@ const Teleconsultation = () => {
   const [language, setLanguage] = useState("all");
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   
-  // Start a consultation with a doctor
   const startConsultation = (doctor: any, type: "video" | "audio" | "chat") => {
     setCurrentDoctor(doctor);
     setConsultationType(type);
     setActiveConsultation(true);
     
-    // Initial system message
     const systemMessage = {
       sender: "system",
       text: `You are now connected with ${doctor.name}. ${type === "chat" ? "You can start chatting now." : "The doctor will join shortly."}`,
@@ -130,7 +63,6 @@ const Teleconsultation = () => {
     });
   };
   
-  // End the active consultation
   const endConsultation = () => {
     toast({
       title: "Consultation Ended",
@@ -143,7 +75,6 @@ const Teleconsultation = () => {
     setMessages([]);
   };
   
-  // Send a message in chat mode
   const sendMessage = () => {
     if (!newMessage.trim()) return;
     
@@ -156,7 +87,6 @@ const Teleconsultation = () => {
     setMessages(prev => [...prev, userMessage]);
     setNewMessage("");
     
-    // Simulate doctor response after 1-3 seconds
     setTimeout(() => {
       const doctorMessage = {
         sender: "doctor",
@@ -168,7 +98,6 @@ const Teleconsultation = () => {
     }, 1000 + Math.random() * 2000);
   };
   
-  // Filter doctors based on criteria
   const filteredDoctors = doctors.filter(doctor => {
     if (showOnlineOnly && !doctor.online) return false;
     if (specialty !== "all" && doctor.specialty !== specialty) return false;
@@ -176,7 +105,6 @@ const Teleconsultation = () => {
     return true;
   });
   
-  // Render the chat interface
   const renderChatInterface = () => (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between bg-gray-100 p-3 rounded-t-lg">
@@ -252,7 +180,6 @@ const Teleconsultation = () => {
     </div>
   );
   
-  // Render the video/audio call interface
   const renderCallInterface = () => (
     <div className="flex flex-col h-full">
       <div className="flex-1 bg-gray-800 relative rounded-t-lg flex items-center justify-center">
@@ -563,7 +490,7 @@ const Teleconsultation = () => {
                       <p className="text-gray-500 mt-1">{t('teleconsultation.startConsultation')}</p>
                       <Button 
                         className="mt-4 bg-medical-blue hover:bg-medical-blue/90"
-                        onClick={() => document.querySelector('button[value="doctors"]')?.click()}
+                        onClick={() => safeElementClick('button[value="doctors"]')}
                       >
                         {t('teleconsultation.findDoctorNow')}
                       </Button>

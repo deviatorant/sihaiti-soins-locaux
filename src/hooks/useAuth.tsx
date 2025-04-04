@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import CryptoJS from 'crypto-js';
+import { useNavigate } from 'react-router-dom';
 
 // Types for our auth context
 type AuthUser = {
@@ -292,6 +293,3 @@ export const withAuth = <P extends object>(
 
   return WithAuth;
 };
-
-// Import navigate for the HOC
-import { useNavigate } from 'react-router-dom';

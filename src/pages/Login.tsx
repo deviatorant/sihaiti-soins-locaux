@@ -16,7 +16,7 @@ import { Facebook, Mail, Phone, Smartphone, User } from "lucide-react";
 const Login = () => {
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginWithPhone, loginWithGoogle, loginWithFacebook, continueAsGuest } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,13 +28,20 @@ const Login = () => {
     e.preventDefault();
     // In a real app, this would validate and authenticate with a backend
     if (email && password) {
-      login({ email });
-      toast({
-        title: t('login.loginSuccess'),
-        description: t('login.redirecting'),
-        variant: "default",
+      login(email, password).then(() => {
+        toast({
+          title: t('login.loginSuccess'),
+          description: t('login.redirecting'),
+          variant: "default",
+        });
+        navigate("/");
+      }).catch(error => {
+        toast({
+          title: t('login.loginError'),
+          description: error.message || t('login.enterCredentials'),
+          variant: "destructive",
+        });
       });
-      navigate("/");
     } else {
       toast({
         title: t('login.loginError'),
@@ -56,13 +63,20 @@ const Login = () => {
       });
     } else if (otp.length === 6) {
       // Verify OTP logic would go here
-      login({ phone: phoneNumber });
-      toast({
-        title: t('login.loginSuccess'),
-        description: t('login.redirecting'),
-        variant: "default",
+      loginWithPhone(phoneNumber, otp).then(() => {
+        toast({
+          title: t('login.loginSuccess'),
+          description: t('login.redirecting'),
+          variant: "default",
+        });
+        navigate("/");
+      }).catch(error => {
+        toast({
+          title: t('login.otpError'),
+          description: error.message || t('login.enterValidOtp'),
+          variant: "destructive",
+        });
       });
-      navigate("/");
     } else {
       toast({
         title: t('login.otpError'),
@@ -74,29 +88,43 @@ const Login = () => {
   
   const handleGoogleLogin = () => {
     // In a real app, this would initiate OAuth with Google
-    login({ provider: "google" });
-    toast({
-      title: t('login.loginSuccess'),
-      description: t('login.redirecting'),
-      variant: "default",
+    loginWithGoogle().then(() => {
+      toast({
+        title: t('login.loginSuccess'),
+        description: t('login.redirecting'),
+        variant: "default",
+      });
+      navigate("/");
+    }).catch(error => {
+      toast({
+        title: t('login.loginError'),
+        description: error.message || t('login.authFailed'),
+        variant: "destructive",
+      });
     });
-    navigate("/");
   };
   
   const handleFacebookLogin = () => {
     // In a real app, this would initiate OAuth with Facebook
-    login({ provider: "facebook" });
-    toast({
-      title: t('login.loginSuccess'),
-      description: t('login.redirecting'),
-      variant: "default",
+    loginWithFacebook().then(() => {
+      toast({
+        title: t('login.loginSuccess'),
+        description: t('login.redirecting'),
+        variant: "default",
+      });
+      navigate("/");
+    }).catch(error => {
+      toast({
+        title: t('login.loginError'),
+        description: error.message || t('login.authFailed'),
+        variant: "destructive",
+      });
     });
-    navigate("/");
   };
   
   const handleGuestLogin = () => {
     // Login as guest
-    login({ isGuest: true });
+    continueAsGuest();
     toast({
       title: t('login.guestLoginSuccess'),
       description: t('login.redirectingGuest'),
@@ -193,8 +221,8 @@ const Login = () => {
                           onChange={setOtp}
                           render={({ slots }) => (
                             <InputOTPGroup>
-                              {slots.map((slot, index) => (
-                                <InputOTPSlot key={index} {...slot} />
+                              {slots.map((slot, i) => (
+                                <InputOTPSlot key={i} {...slot} index={i} />
                               ))}
                             </InputOTPGroup>
                           )}
