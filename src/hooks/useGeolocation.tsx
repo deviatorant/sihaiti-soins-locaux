@@ -1,108 +1,69 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
-interface GeolocationPosition {
+export interface Position {
   latitude: number;
   longitude: number;
-  accuracy: number;
 }
 
-interface UseGeolocationResult {
-  position: GeolocationPosition | null;
-  error: string | null;
-  positionError: GeolocationPositionError | null; // Add this property
-  loading: boolean;
-  getPosition: () => Promise<GeolocationPosition>;
-}
-
-export function useGeolocation(): UseGeolocationResult {
-  const [position, setPosition] = useState<GeolocationPosition | null>(null);
+export const useGeolocation = () => {
+  const [position, setPosition] = useState<Position | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [positionError, setPositionError] = useState<GeolocationPositionError | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Function to get current position
-  const getPosition = (): Promise<GeolocationPosition> => {
-    return new Promise((resolve, reject) => {
-      setLoading(true);
-      setError(null);
-      setPositionError(null);
+  const getPosition = useCallback(() => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser');
+      return;
+    }
 
-      if (!navigator.geolocation) {
-        const errorMessage = 'Geolocation is not supported by your browser';
-        setError(errorMessage);
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setPosition({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
         setLoading(false);
-        reject(new Error(errorMessage));
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const geolocationPosition: GeolocationPosition = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-          };
-          setPosition(geolocationPosition);
-          setLoading(false);
-          resolve(geolocationPosition);
-        },
-        (error) => {
-          let errorMessage: string;
-          
-          setPositionError(error);
-          
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'User denied the request for geolocation';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information is unavailable';
-              break;
-            case error.TIMEOUT:
-              errorMessage = 'The request to get user location timed out';
-              break;
-            default:
-              errorMessage = 'An unknown error occurred';
-          }
-          
-          setError(errorMessage);
-          setLoading(false);
-          reject(new Error(errorMessage));
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    });
-  };
-
-  // Automatically try to get position on mount
-  useEffect(() => {
-    getPosition().catch(() => {}); // Catch to prevent unhandled rejection
+        setError(null);
+      },
+      (error) => {
+        setError(error.message);
+        setLoading(false);
+        setPosition(null);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 }
+    );
   }, []);
 
-  return { position, error, positionError, loading, getPosition };
-}
+  // Helper function to calculate distance between two points
+  const calculateDistance = (
+    lat1: number, 
+    lon1: number, 
+    lat2: number, 
+    lon2: number
+  ): number => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const d = R * c; // Distance in km
+    return d;
+  };
 
-// Fallback geocoding function using OpenStreetMap Nominatim (in case user enters address)
-export async function geocodeAddress(address: string): Promise<GeolocationPosition | null> {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
-    );
-    
-    const data = await response.json();
-    
-    if (data && data.length > 0) {
-      return {
-        latitude: parseFloat(data[0].lat),
-        longitude: parseFloat(data[0].lon),
-        accuracy: 0 // Nominatim doesn't provide accuracy
-      };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Geocoding error:', error);
-    return null;
-  }
-}
+  const deg2rad = (deg: number): number => {
+    return deg * (Math.PI/180);
+  };
+
+  return {
+    position,
+    getPosition,
+    positionError: error,
+    isLoading: loading,
+    calculateDistance
+  };
+};
