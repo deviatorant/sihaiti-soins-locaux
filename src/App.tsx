@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +8,6 @@ import { AuthProvider } from "@/providers/AuthProvider";
 import { DoctorsProvider } from "@/hooks/useDoctors";
 import { useEffect } from "react";
 import { initializeAllServices } from "@/services/supabase";
-import { initializeAllServicesWithAmbuPharm } from "@/services/supabaseSetup";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -41,9 +39,8 @@ const AppSetup = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Use the new initialization function that includes ambulance and pharmacy services
-        await initializeAllServicesWithAmbuPharm();
-        console.log('App initialization complete with ambulance and pharmacy services');
+        await initializeAllServices();
+        console.log('App initialization complete');
       } catch (error) {
         console.error('Error initializing app:', error);
       }

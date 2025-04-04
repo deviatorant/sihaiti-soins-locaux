@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +22,7 @@ import {
   Phone, 
   Video, 
   Filter, 
+  Bookmark,
   User,
   LocateFixed
 } from "lucide-react";
@@ -81,7 +83,7 @@ const Doctors = () => {
     setIsModalOpen(false);
   };
   
-  const handleBookAppointment = (doctorId: string) => {
+  const handleBookAppointment = (doctorId: number) => {
     if (!user) {
       toast({
         title: t('login.loginRequired'),
@@ -95,7 +97,7 @@ const Doctors = () => {
     navigate(`/appointments?doctor=${doctorId}`);
   };
   
-  const handleCallDoctor = (doctorId: string) => {
+  const handleCallDoctor = (doctorId: number) => {
     if (!user) {
       toast({
         title: t('login.loginRequired'),
@@ -113,7 +115,7 @@ const Doctors = () => {
     });
   };
   
-  const handleVideoConsult = (doctorId: string) => {
+  const handleVideoConsult = (doctorId: number) => {
     if (!user) {
       toast({
         title: t('login.loginRequired'),
@@ -143,12 +145,12 @@ const Doctors = () => {
             <div className="flex items-center mt-1">
               <Star className="h-4 w-4 text-yellow-400 mr-1" />
               <span className="font-semibold">{doctor.rating}</span>
-              <span className="text-gray-500 text-sm ml-1">({doctor.reviewCount})</span>
+              <span className="text-gray-500 text-sm ml-1">({doctor.reviews})</span>
             </div>
             
-            {doctor.acceptingNewPatients && (
+            {doctor.verified && (
               <Badge variant="outline" className="mt-2 border-blue-500 text-blue-500">
-                {t('doctors.acceptingPatients')}
+                {t('doctors.verified')}
               </Badge>
             )}
             
@@ -165,7 +167,7 @@ const Doctors = () => {
             
             <div className="flex items-center mt-2">
               <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-              <span className="text-sm text-gray-600">{doctor.address}</span>
+              <span className="text-sm text-gray-600">{doctor.location}</span>
             </div>
             
             {doctor.distance !== undefined && (
@@ -184,12 +186,12 @@ const Doctors = () => {
             
             <div className="mt-3">
               <p className="text-sm font-medium">{t('doctors.education')}</p>
-              <p className="text-sm text-gray-600">{doctor.education.join(', ')}</p>
+              <p className="text-sm text-gray-600">{doctor.education}</p>
             </div>
             
             <div className="mt-2">
               <p className="text-sm font-medium">{t('doctors.experience')}</p>
-              <p className="text-sm text-gray-600">{doctor.experience} {t('doctors.years')}</p>
+              <p className="text-sm text-gray-600">{doctor.experience}</p>
             </div>
           </div>
           
@@ -236,7 +238,7 @@ const Doctors = () => {
               </Button>
             </div>
             
-            {doctor.availableSlots && doctor.availableToday && doctor.availableSlots.length > 0 && (
+            {doctor.availableToday && doctor.availableSlots && doctor.availableSlots.length > 0 && (
               <div className="mt-4">
                 <p className="text-sm font-medium mb-2">{t('doctors.todaySlots')}</p>
                 <div className="flex flex-wrap gap-1">
