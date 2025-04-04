@@ -1,5 +1,5 @@
 
-import { Routes, Route, useNavigate, useLocation, BrowserRouter } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { initializeAllServices, debugOAuthStatus } from "@/services/supabase";
 import Index from "./pages/Index";
@@ -15,7 +15,6 @@ import Pharmacy from "./pages/Pharmacy";
 import HomeCare from "./pages/HomeCare";
 import Teleconsultation from "./pages/Teleconsultation";
 import Profile from "./pages/Profile";
-import { AuthProvider } from "./hooks/useAuth";
 
 // Component to handle setup when the app first loads
 const AppSetup = ({ children }: { children: React.ReactNode }) => {
@@ -51,27 +50,23 @@ const AppSetup = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppSetup>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/service/:serviceType" element={<ServiceDetail />} />
-            <Route path="/appointments" element={<Appointments />} />
-            <Route path="/doctors" element={<Doctors />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/pharmacy" element={<Pharmacy />} />
-            <Route path="/homecare" element={<HomeCare />} />
-            <Route path="/teleconsultation" element={<Teleconsultation />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppSetup>
-      </AuthProvider>
-    </BrowserRouter>
+    <AppSetup>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/service/:serviceType" element={<ServiceDetail />} />
+        <Route path="/appointments" element={<Appointments />} />
+        <Route path="/doctors" element={<Doctors />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/pharmacy" element={<Pharmacy />} />
+        <Route path="/homecare" element={<HomeCare />} />
+        <Route path="/teleconsultation" element={<Teleconsultation />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AppSetup>
   );
 };
 

@@ -7,8 +7,6 @@ import { BrowserRouter } from "react-router-dom";
 import { TranslationProvider } from "@/hooks/useTranslation";
 import { AuthProvider } from "@/hooks/useAuth";
 import { DoctorsProvider } from "@/hooks/useDoctors";
-import { useEffect } from "react";
-import { initializeAllServices } from "@/services/supabase";
 import AppRoutes from "./AppRoutes";
 
 const queryClient = new QueryClient({
