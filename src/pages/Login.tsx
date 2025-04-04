@@ -16,32 +16,27 @@ import { Facebook, Mail, Phone, Smartphone, User } from "lucide-react";
 const Login = () => {
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
-  const { login, loginWithPhone, loginWithGoogle, loginWithFacebook, continueAsGuest } = useAuth();
+  const { login, loginWithPhone, loginWithGoogle, loginWithFacebook, continueAsGuest, sendOTP } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would validate and authenticate with a backend
     if (email && password) {
-      login(email, password).then(() => {
-        toast({
-          title: t('login.loginSuccess'),
-          description: t('login.redirecting'),
-          variant: "default",
-        });
+      setIsLoading(true);
+      try {
+        await login(email, password);
         navigate("/");
-      }).catch(error => {
-        toast({
-          title: t('login.loginError'),
-          description: error.message || t('login.enterCredentials'),
-          variant: "destructive",
-        });
-      });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       toast({
         title: t('login.loginError'),
@@ -51,32 +46,34 @@ const Login = () => {
     }
   };
   
-  const handlePhoneLogin = (e: React.FormEvent) => {
+  const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Format phone number (ensure it has country code)
+    const formattedPhone = phoneNumber.startsWith('+') 
+      ? phoneNumber 
+      : `+212${phoneNumber.startsWith('0') ? phoneNumber.substring(1) : phoneNumber}`;
+    
     if (!isOtpSent) {
-      // Send OTP logic would go here
-      setIsOtpSent(true);
-      toast({
-        title: t('login.otpSent'),
-        description: t('login.checkPhone'),
-        variant: "default",
-      });
+      setIsLoading(true);
+      try {
+        await sendOTP(formattedPhone);
+        setIsOtpSent(true);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
     } else if (otp.length === 6) {
-      // Verify OTP logic would go here
-      loginWithPhone(phoneNumber, otp).then(() => {
-        toast({
-          title: t('login.loginSuccess'),
-          description: t('login.redirecting'),
-          variant: "default",
-        });
+      setIsLoading(true);
+      try {
+        await loginWithPhone(formattedPhone, otp);
         navigate("/");
-      }).catch(error => {
-        toast({
-          title: t('login.otpError'),
-          description: error.message || t('login.enterValidOtp'),
-          variant: "destructive",
-        });
-      });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       toast({
         title: t('login.otpError'),
@@ -86,51 +83,31 @@ const Login = () => {
     }
   };
   
-  const handleGoogleLogin = () => {
-    // In a real app, this would initiate OAuth with Google
-    loginWithGoogle().then(() => {
-      toast({
-        title: t('login.loginSuccess'),
-        description: t('login.redirecting'),
-        variant: "default",
-      });
-      navigate("/");
-    }).catch(error => {
-      toast({
-        title: t('login.loginError'),
-        description: error.message || t('login.authFailed'),
-        variant: "destructive",
-      });
-    });
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      // Redirect happens in the OAuth flow
+    } catch (error) {
+      console.error(error);
+    }
   };
   
-  const handleFacebookLogin = () => {
-    // In a real app, this would initiate OAuth with Facebook
-    loginWithFacebook().then(() => {
-      toast({
-        title: t('login.loginSuccess'),
-        description: t('login.redirecting'),
-        variant: "default",
-      });
-      navigate("/");
-    }).catch(error => {
-      toast({
-        title: t('login.loginError'),
-        description: error.message || t('login.authFailed'),
-        variant: "destructive",
-      });
-    });
+  const handleFacebookLogin = async () => {
+    try {
+      await loginWithFacebook();
+      // Redirect happens in the OAuth flow
+    } catch (error) {
+      console.error(error);
+    }
   };
   
-  const handleGuestLogin = () => {
-    // Login as guest
-    continueAsGuest();
-    toast({
-      title: t('login.guestLoginSuccess'),
-      description: t('login.redirectingGuest'),
-      variant: "default",
-    });
-    navigate("/");
+  const handleGuestLogin = async () => {
+    try {
+      await continueAsGuest();
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+    }
   };
   
   return (
@@ -186,8 +163,12 @@ const Login = () => {
                       />
                     </div>
                     
-                    <Button type="submit" className="w-full bg-medical-blue hover:bg-medical-blue/90">
-                      {t('login.loginButton')}
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-medical-blue hover:bg-medical-blue/90"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? t('common.loading') : t('login.loginButton')}
                     </Button>
                   </form>
                 </TabsContent>
@@ -207,7 +188,7 @@ const Login = () => {
                           className="rounded-l-none"
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
-                          disabled={isOtpSent}
+                          disabled={isOtpSent || isLoading}
                         />
                       </div>
                     </div>
@@ -219,6 +200,7 @@ const Login = () => {
                           maxLength={6}
                           value={otp}
                           onChange={setOtp}
+                          disabled={isLoading}
                           render={({ slots }) => (
                             <InputOTPGroup>
                               {slots.map((slot, i) => (
@@ -230,8 +212,14 @@ const Login = () => {
                       </div>
                     )}
                     
-                    <Button type="submit" className="w-full bg-medical-blue hover:bg-medical-blue/90">
-                      {isOtpSent ? t('login.verifyOtp') : t('login.sendOtp')}
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-medical-blue hover:bg-medical-blue/90"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 
+                        t('common.loading') : 
+                        (isOtpSent ? t('login.verifyOtp') : t('login.sendOtp'))}
                     </Button>
                     
                     {isOtpSent && (
@@ -240,6 +228,7 @@ const Login = () => {
                         variant="outline"
                         className="w-full"
                         onClick={() => setIsOtpSent(false)}
+                        disabled={isLoading}
                       >
                         {t('login.changePhoneNumber')}
                       </Button>
@@ -264,6 +253,7 @@ const Login = () => {
                   variant="outline"
                   className="w-full"
                   onClick={handleGoogleLogin}
+                  disabled={isLoading}
                 >
                   <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" aria-hidden="true">
                     <path
@@ -290,6 +280,7 @@ const Login = () => {
                   variant="outline"
                   className="w-full"
                   onClick={handleFacebookLogin}
+                  disabled={isLoading}
                 >
                   <Facebook className="h-5 w-5 mr-2 text-[#1877F2]" />
                   Facebook
@@ -300,6 +291,7 @@ const Login = () => {
                 variant="outline"
                 className="w-full"
                 onClick={handleGuestLogin}
+                disabled={isLoading}
               >
                 <User className="h-5 w-5 mr-2" />
                 {t('login.continueAsGuest')}

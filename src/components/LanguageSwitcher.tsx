@@ -1,26 +1,51 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Languages } from "lucide-react";
+import { Globe } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 const LanguageSwitcher = () => {
-  const { language, setLanguage, t } = useTranslation();
+  const { language, setLanguage } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const toggleLanguage = () => {
-    setLanguage(language === 'fr' ? 'ar' : 'fr');
-  };
+  const languages = [
+    { code: 'fr', label: 'Français' },
+    { code: 'ar', label: 'العربية' },
+    { code: 'en', label: 'English' }
+  ];
 
   return (
-    <Button 
-      variant="ghost" 
-      size="icon" 
-      onClick={toggleLanguage}
-      title={t('general.language')}
-      className="rounded-full"
-    >
-      <Languages className="h-5 w-5" />
-      <span className="ml-2 text-xs font-semibold">{language === 'fr' ? 'FR' : 'عر'}</span>
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="rounded-full flex items-center justify-center gap-2 hover:bg-gray-100"
+        >
+          <Globe className="h-5 w-5 text-gray-700" />
+          <span className="text-xs font-semibold uppercase">
+            {language}
+          </span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-36">
+        {languages.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            className={`cursor-pointer ${language === lang.code ? 'font-bold bg-gray-100' : ''}`}
+            onClick={() => setLanguage(lang.code as any)}
+          >
+            {lang.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
