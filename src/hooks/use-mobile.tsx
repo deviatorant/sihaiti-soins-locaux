@@ -1,19 +1,18 @@
-import * as React from "react"
 
-const MOBILE_BREAKPOINT = 768
+import React, { useState } from 'react';
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+// Current exports from the file that we need to preserve
+export const useMobile = () => {
+  const [isMobile] = useState(window.innerWidth < 768);
+  return isMobile;
+};
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
-
-  return !!isMobile
-}
+// Adding the missing withToggleState HOC
+export const withToggleState = <P extends object>(
+  Component: React.ComponentType<P & { isOpen: boolean; setIsOpen: (isOpen: boolean) => void }>
+) => {
+  return (props: P) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return <Component {...props} isOpen={isOpen} setIsOpen={setIsOpen} />;
+  };
+};

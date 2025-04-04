@@ -1,405 +1,270 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase, auth as supabaseAuth } from '@/services/supabase';
-import { User, Session } from '@supabase/supabase-js';
-import { toast } from '@/hooks/use-toast';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '@/services/supabase';
 import { useTranslation } from './useTranslation';
+import { toast } from '@/components/ui/use-toast';
 
-// Types for our auth context
+// Types
 type AuthUser = {
   id: string;
   email?: string;
   phone?: string;
-  firstName?: string;
-  lastName?: string;
-  isGuest: boolean;
-  patientID: string;
-  token?: string;
-  tokenExpiry?: number;
-};
+  name?: string;
+  avatar_url?: string;
+} | null;
 
 type AuthContextType = {
-  user: AuthUser | null;
-  supabaseUser: User | null;
-  session: Session | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithPhone: (phone: string, otp: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  loginWithFacebook: () => Promise<void>;
+  user: AuthUser;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signInWithOTP: (phone: string) => Promise<boolean>;
+  verifyOTP: (phone: string, otp: string) => Promise<boolean>;
+  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signOut: () => Promise<void>;
   continueAsGuest: () => void;
-  logout: () => Promise<void>;
-  register: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
-  sendOTP: (phone: string) => Promise<void>;
+  isLoggedIn: boolean;
 };
 
-// Generate a unique patient ID
-const generatePatientID = () => {
-  return 'PT' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5).toUpperCase();
-};
-
-// Context creation
+// Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser>(null);
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
 
-  // Initialize auth state from Supabase
+  // Check authentication status on initial load
   useEffect(() => {
-    const initializeAuth = async () => {
+    const getUser = async () => {
+      setLoading(true);
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Failed to get session:', error);
-        } else if (data?.session) {
-          setSession(data.session);
-          setSupabaseUser(data.session.user);
-          
-          // Get additional user data from the database
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', data.session.user.id)
-            .single();
-            
-          if (userError) {
-            console.error('Failed to get user data:', userError);
-          } else if (userData) {
-            setUser({
-              id: userData.id,
-              email: userData.email,
-              phone: userData.phone,
-              firstName: userData.first_name,
-              lastName: userData.last_name,
-              isGuest: userData.is_guest || false,
-              patientID: userData.patient_id,
-              token: data.session.access_token,
-              tokenExpiry: new Date(data.session.expires_at).getTime(),
-            });
-          }
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            phone: session.user.phone,
+            // Additional user data can be fetched from user profiles table
+          });
+          setIsLoggedIn(true);
+        } else {
+          setUser(null);
+          setIsLoggedIn(false);
         }
       } catch (error) {
-        console.error('Failed to initialize auth:', error);
+        console.error('Error getting user session:', error);
+        toast({
+          title: t('common.error'),
+          description: t('login.authFailed'),
+          variant: "destructive",
+        });
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-    
-    // Set up subscription for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setSupabaseUser(session?.user || null);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Get user data from the database after sign in
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (userError && userError.code !== 'PGRST116') {
-            console.error('Failed to get user data after sign in:', userError);
-          } else if (userData) {
-            setUser({
-              id: userData.id,
-              email: userData.email,
-              phone: userData.phone,
-              firstName: userData.first_name,
-              lastName: userData.last_name,
-              isGuest: userData.is_guest || false,
-              patientID: userData.patient_id,
-              token: session.access_token,
-              tokenExpiry: new Date(session.expires_at).getTime(),
-            });
-          }
-        } else if (event === 'SIGNED_OUT') {
+
+    getUser();
+
+    // Listen for authentication state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            phone: session.user.phone,
+          });
+          setIsLoggedIn(true);
+        } else {
           setUser(null);
+          setIsLoggedIn(false);
         }
+        setLoading(false);
       }
     );
 
-    initializeAuth();
-    
-    // Clean up subscription on unmount
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
-  }, []);
+  }, [t]);
 
-  // Auth methods
-  const login = async (email: string, password: string) => {
+  // Sign in with email and password
+  const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      const { data, error } = await supabaseAuth.signIn(email, password);
-      
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (error) throw error;
-      
+
       toast({
         title: t('login.loginSuccess'),
         description: t('login.redirecting'),
       });
-      
-      return;
+
+      // Redirect to home or the page they were trying to access
+      const redirectPath = location.state?.from?.pathname || '/';
+      navigate(redirectPath);
     } catch (error: any) {
-      console.error('Login failed:', error);
+      console.error('Error signing in:', error.message);
       toast({
         title: t('login.loginError'),
-        description: error.message || t('login.enterCredentials'),
-        variant: 'destructive',
+        description: error.message,
+        variant: "destructive",
       });
-      throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const sendOTP = async (phone: string) => {
+  // Sign in with OTP via SMS
+  const signInWithOTP = async (phone: string) => {
     try {
-      setIsLoading(true);
-      
-      // Format phone number if needed
-      const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
-      
-      const { data, error } = await supabaseAuth.signInWithOtp(formattedPhone);
-      
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+      });
+
       if (error) throw error;
-      
+
       toast({
         title: t('login.otpSent'),
         description: t('login.checkPhone'),
       });
-      
-      return;
+
+      return true;
     } catch (error: any) {
-      console.error('OTP sending failed:', error);
+      console.error('Error sending OTP:', error.message);
       toast({
-        title: t('login.otpError'),
+        title: t('common.error'),
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
-      throw error;
-    } finally {
-      setIsLoading(false);
+      return false;
     }
   };
 
-  const loginWithPhone = async (phone: string, otp: string) => {
+  // Verify OTP
+  const verifyOTP = async (phone: string, otp: string) => {
     try {
-      setIsLoading(true);
-      
-      // Format phone number if needed
-      const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
-      
-      const { data, error } = await supabaseAuth.verifyOtp(formattedPhone, otp);
-      
+      const { error } = await supabase.auth.verifyOtp({
+        phone,
+        token: otp,
+        type: 'sms',
+      });
+
       if (error) throw error;
-      
+
       toast({
         title: t('login.loginSuccess'),
         description: t('login.redirecting'),
       });
-      
-      return;
+
+      // Redirect to home or the page they were trying to access
+      const redirectPath = location.state?.from?.pathname || '/';
+      navigate(redirectPath);
+      return true;
     } catch (error: any) {
-      console.error('Phone login failed:', error);
+      console.error('Error verifying OTP:', error.message);
       toast({
         title: t('login.otpError'),
-        description: error.message || t('login.enterValidOtp'),
-        variant: 'destructive',
+        description: error.message,
+        variant: "destructive",
       });
-      throw error;
-    } finally {
-      setIsLoading(false);
+      return false;
     }
   };
 
-  const loginWithGoogle = async () => {
+  // Sign up
+  const signUp = async (email: string, password: string, name: string) => {
     try {
-      setIsLoading(true);
-      const { data, error } = await supabaseAuth.signInWithProvider('google');
-      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+        },
+      });
+
+      if (error) throw error;
+
+      // After sign up, create user profile in the database
+      await supabase.from('profiles').insert({
+        id: (await supabase.auth.getUser()).data.user?.id,
+        name,
+        email,
+      });
+
+      toast({
+        title: 'Account created successfully',
+        description: 'Please check your email for a confirmation link',
+      });
+
+      // Redirect to login
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Error signing up:', error.message);
+      toast({
+        title: 'Sign up failed',
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Sign out
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Redirect happens automatically
-      return;
+      toast({
+        title: 'Signed out successfully',
+      });
+      
+      navigate('/login');
     } catch (error: any) {
-      console.error('Google login failed:', error);
+      console.error('Error signing out:', error.message);
       toast({
-        title: t('login.loginError'),
-        description: error.message || t('login.authFailed'),
-        variant: 'destructive',
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loginWithFacebook = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabaseAuth.signInWithProvider('facebook');
-      
-      if (error) throw error;
-      
-      // Redirect happens automatically
-      return;
-    } catch (error: any) {
-      console.error('Facebook login failed:', error);
-      toast({
-        title: t('login.loginError'),
-        description: error.message || t('login.authFailed'),
-        variant: 'destructive',
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const continueAsGuest = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Create a guest user in the database
-      const patientID = generatePatientID();
-      
-      setUser({
-        id: `guest-${Date.now()}`,
-        isGuest: true,
-        patientID,
-        tokenExpiry: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days for guest
-      });
-      
-      toast({
-        title: t('login.guestLoginSuccess'),
-        description: t('login.redirectingGuest'),
-      });
-    } catch (error: any) {
-      console.error('Guest login failed:', error);
-      toast({
-        title: t('login.loginError'),
+        title: 'Sign out failed',
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const register = async (email: string, password: string, firstName: string, lastName: string) => {
-    try {
-      setIsLoading(true);
-      
-      // Generate a unique patient ID
-      const patientID = generatePatientID();
-      
-      // Register the user with Supabase
-      const { data, error } = await supabaseAuth.signUp(email, password, {
-        first_name: firstName,
-        last_name: lastName,
-        patient_id: patientID,
-      });
-      
-      if (error) throw error;
-      
-      // If the user was created successfully, insert into users table
-      if (data.user) {
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert({
-            id: data.user.id,
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            patient_id: patientID,
-            is_guest: false,
-          });
-          
-        if (insertError) {
-          console.error('Failed to insert user data:', insertError);
-          // Still consider registration successful if Supabase auth worked
-        }
-      }
-      
-      toast({
-        title: t('auth.registrationSuccess'),
-        description: t('auth.verifyEmail'),
-      });
-      
-      return;
-    } catch (error: any) {
-      console.error('Registration failed:', error);
-      toast({
-        title: t('auth.registrationError'),
-        description: error.message,
-        variant: 'destructive',
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
+  // Continue as guest
+  const continueAsGuest = () => {
+    setUser(null);
+    setIsLoggedIn(false);
+    
+    toast({
+      title: t('login.guestLoginSuccess'),
+      description: t('login.redirectingGuest'),
+    });
+    
+    navigate('/');
   };
 
-  const logout = async () => {
-    try {
-      setIsLoading(true);
-      
-      if (user?.isGuest) {
-        // Just clear the guest user state
-        setUser(null);
-      } else {
-        // Sign out from Supabase
-        const { error } = await supabaseAuth.signOut();
-        if (error) throw error;
-      }
-      
-      toast({
-        title: t('profile.logoutSuccess'),
-      });
-    } catch (error: any) {
-      console.error('Logout failed:', error);
-      toast({
-        title: t('profile.logoutError'),
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-      setUser(null);
-      setSupabaseUser(null);
-      setSession(null);
-    }
-  };
-
-  const contextValue: AuthContextType = {
+  // Auth context value
+  const value = {
     user,
-    supabaseUser,
-    session,
-    isAuthenticated: !!user || !!supabaseUser,
-    isLoading,
-    login,
-    loginWithPhone,
-    loginWithGoogle,
-    loginWithFacebook,
+    loading,
+    signIn,
+    signInWithOTP,
+    verifyOTP,
+    signUp,
+    signOut,
     continueAsGuest,
-    logout,
-    register,
-    sendOTP,
+    isLoggedIn,
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -414,47 +279,24 @@ export const useAuth = () => {
   return context;
 };
 
-// HOC for route protection
-export const withAuth = <P extends object>(
-  Component: React.ComponentType<P>,
-  guestsAllowed = false
-) => {
-  const WithAuth: React.FC<P> = (props) => {
-    const { isAuthenticated, isLoading, user } = useAuth();
+// Higher-order component for protecting routes
+export const withAuth = (Component: React.ComponentType<any>) => {
+  const WithAuth = (props: any) => {
+    const { isLoggedIn, loading } = useAuth();
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const location = useLocation();
 
     useEffect(() => {
-      if (!isLoading && !isAuthenticated) {
-        toast({
-          title: t('auth.authRequired'),
-          description: t('auth.pleaseLogin'),
-          variant: 'destructive',
-        });
-        navigate('/login');
-      } else if (!isLoading && !guestsAllowed && user?.isGuest) {
-        toast({
-          title: t('auth.fullAccountRequired'),
-          description: t('auth.pleaseCreateAccount'),
-          variant: 'destructive',
-        });
-        navigate('/login');
+      if (!loading && !isLoggedIn) {
+        navigate('/login', { state: { from: location } });
       }
-    }, [isLoading, isAuthenticated, user, navigate, t]);
+    }, [isLoggedIn, loading, navigate, location]);
 
-    if (isLoading) {
-      return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
+    if (loading) {
+      return <div>Loading...</div>;
     }
 
-    if (!isAuthenticated) {
-      return null;
-    }
-
-    if (!guestsAllowed && user?.isGuest) {
-      return null;
-    }
-
-    return <Component {...props} />;
+    return isLoggedIn ? <Component {...props} /> : null;
   };
 
   return WithAuth;

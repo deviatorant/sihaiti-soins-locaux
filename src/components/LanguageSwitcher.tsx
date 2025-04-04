@@ -10,12 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const LanguageSwitcher = () => {
-  const { language, setLanguage, t } = useTranslation();
+  const { language, setLanguage } = useTranslation();
 
   const languages = [
     { code: 'fr', label: 'Français', flag: '🇫🇷' },
-    { code: 'ar', label: 'العربية', flag: '🇲🇦' },
-    { code: 'en', label: 'English', flag: '🇬🇧' }
+    { code: 'ar', label: 'العربية', flag: '🇲🇦' }
   ];
 
   return (
