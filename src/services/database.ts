@@ -24,8 +24,6 @@ export interface Doctor {
   acceptingNewPatients: boolean;
   insurances: string[];
   coordinates: [number, number];
-  location?: string;
-  availableSlots?: string[];
 }
 
 // Fetch all doctors
@@ -107,16 +105,14 @@ const mockDoctors: Doctor[] = [
     reviewCount: 128,
     acceptingNewPatients: true,
     insurances: ['CNOPS', 'CNSS', 'RMA'],
-    coordinates: [33.5731, -7.5898],
-    location: 'Casablanca',
-    availableSlots: ['9:00', '11:30', '14:00']
+    coordinates: [33.5731, -7.5898]
   },
   {
     id: '2',
     name: 'Dr. Mohammed Al-Fasi',
     specialty: 'Pediatrics',
-    bio: "Caring pediatrician dedicated to children's health and development.",
-    education: ['Rabat Medical University', "Children's Hospital Fellowship"],
+    bio: 'Caring pediatrician dedicated to children's health and development.',
+    education: ['Rabat Medical University', 'Children\'s Hospital Fellowship'],
     experience: 10,
     languages: ['Arabic', 'French'],
     certifications: ['Board of Pediatrics', 'Pediatric Advanced Life Support'],
@@ -131,9 +127,7 @@ const mockDoctors: Doctor[] = [
     reviewCount: 95,
     acceptingNewPatients: true,
     insurances: ['CNOPS', 'CNSS', 'AXA'],
-    coordinates: [33.5950, -7.6192],
-    location: 'Casablanca',
-    availableSlots: ['8:30', '10:00', '15:30']
+    coordinates: [33.5950, -7.6192]
   },
   {
     id: '3',
@@ -155,9 +149,7 @@ const mockDoctors: Doctor[] = [
     reviewCount: 76,
     acceptingNewPatients: false,
     insurances: ['CNSS', 'MAMDA', 'Allianz'],
-    coordinates: [34.0209, -6.8416],
-    location: 'Rabat',
-    availableSlots: ['13:00', '16:45']
+    coordinates: [34.0209, -6.8416]
   },
   {
     id: '4',
@@ -179,9 +171,7 @@ const mockDoctors: Doctor[] = [
     reviewCount: 102,
     acceptingNewPatients: true,
     insurances: ['CNOPS', 'RMA', 'MAMDA'],
-    coordinates: [31.6295, -7.9811],
-    location: 'Marrakech',
-    availableSlots: ['9:30', '12:00', '14:30']
+    coordinates: [31.6295, -7.9811]
   },
   {
     id: '5',
@@ -203,9 +193,7 @@ const mockDoctors: Doctor[] = [
     reviewCount: 68,
     acceptingNewPatients: true,
     insurances: ['CNSS', 'Allianz', 'Wafa Assurance'],
-    coordinates: [35.7595, -5.8340],
-    location: 'Tangier',
-    availableSlots: ['10:15', '15:00', '17:30']
+    coordinates: [35.7595, -5.8340]
   }
 ];
 
@@ -242,3 +230,4 @@ export const addDoctor = async (doctor: Omit<Doctor, 'id'>) => {
     return null;
   }
 };
+

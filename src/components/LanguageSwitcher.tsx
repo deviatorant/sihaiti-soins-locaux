@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Globe } from "lucide-react";
@@ -10,11 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const LanguageSwitcher = () => {
-  const { language, setLanguage } = useTranslation();
+  const { language, setLanguage, t } = useTranslation();
 
   const languages = [
     { code: 'fr', label: 'Français', flag: '🇫🇷' },
-    { code: 'ar', label: 'العربية', flag: '🇲🇦' }
+    { code: 'ar', label: 'العربية', flag: '🇲🇦' },
+    { code: 'en', label: 'English', flag: '🇬🇧' }
   ];
 
   return (

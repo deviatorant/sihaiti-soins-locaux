@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/hooks/useAuth";
@@ -59,10 +60,12 @@ const Doctors = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  // Trigger getPosition when component mounts
   useEffect(() => {
     getPosition();
   }, []);
   
+  // Open doctor profile modal when a doctor is selected
   useEffect(() => {
     if (selectedDoctor) {
       setIsModalOpen(true);
@@ -80,7 +83,7 @@ const Doctors = () => {
     setIsModalOpen(false);
   };
   
-  const handleBookAppointment = (doctorId: string) => {
+  const handleBookAppointment = (doctorId: number) => {
     if (!user) {
       toast({
         title: t('login.loginRequired'),
@@ -94,7 +97,7 @@ const Doctors = () => {
     navigate(`/appointments?doctor=${doctorId}`);
   };
   
-  const handleCallDoctor = (doctorId: string) => {
+  const handleCallDoctor = (doctorId: number) => {
     if (!user) {
       toast({
         title: t('login.loginRequired'),
@@ -112,7 +115,7 @@ const Doctors = () => {
     });
   };
   
-  const handleVideoConsult = (doctorId: string) => {
+  const handleVideoConsult = (doctorId: number) => {
     if (!user) {
       toast({
         title: t('login.loginRequired'),
@@ -289,6 +292,7 @@ const Doctors = () => {
         </div>
         
         <div className="flex flex-col md:flex-row gap-6">
+          {/* Filters sidebar */}
           <div className={`${isFiltersOpen ? 'block' : 'hidden md:block'} md:w-1/4 bg-white p-4 rounded-lg shadow-sm`}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold text-lg">{t('doctors.filters')}</h2>
@@ -408,6 +412,7 @@ const Doctors = () => {
             </div>
           </div>
           
+          {/* Main content */}
           <div className="flex-1">
             <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
               <div className="relative">

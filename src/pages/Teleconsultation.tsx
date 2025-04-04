@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -33,6 +34,48 @@ export interface Consultation {
   notes?: string;
 }
 
+// Mock data for past consultations (will be replaced with Supabase data)
+const mockPastConsultations: Consultation[] = [
+  {
+    id: 'c1',
+    doctorId: '1',
+    patientId: 'p1',
+    type: 'video',
+    status: 'completed',
+    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+    notes: 'Follow-up in 2 weeks',
+  },
+  {
+    id: 'c2',
+    doctorId: '2',
+    patientId: 'p1',
+    type: 'chat',
+    status: 'completed',
+    date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
+    notes: 'Prescription sent',
+  },
+];
+
+// Mock data for upcoming consultations (will be replaced with Supabase data)
+const mockUpcomingConsultations: Consultation[] = [
+  {
+    id: 'c3',
+    doctorId: '3',
+    patientId: 'p1',
+    type: 'video',
+    status: 'scheduled',
+    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+  },
+  {
+    id: 'c4',
+    doctorId: '1',
+    patientId: 'p1',
+    type: 'audio',
+    status: 'scheduled',
+    date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
+  },
+];
+
 const Teleconsultation: React.FC = () => {
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
@@ -48,6 +91,7 @@ const Teleconsultation: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
 
+  // Function to start a consultation
   const startConsultation = async (consultation: Consultation) => {
     setSelectedConsultation(consultation);
     setConsultationType(consultation.type);
@@ -55,6 +99,7 @@ const Teleconsultation: React.FC = () => {
 
     if (consultation.type === 'video' || consultation.type === 'audio') {
       try {
+        // Request user media (camera and/or microphone)
         const constraints = {
           video: consultation.type === 'video',
           audio: true,
@@ -62,15 +107,18 @@ const Teleconsultation: React.FC = () => {
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         
+        // Display the local video stream if video consultation
         if (videoRef.current && consultation.type === 'video') {
           videoRef.current.srcObject = stream;
         }
 
+        // Initialize Twilio or other service here in a real implementation
         toast({
           title: t('teleconsultation.connecting'),
           description: t('teleconsultation.pleaseWait'),
         });
 
+        // Simulate connection delay
         setTimeout(() => {
           toast({
             title: t('teleconsultation.connected'),
@@ -87,11 +135,14 @@ const Teleconsultation: React.FC = () => {
         setIsInConsultation(false);
       }
     } else {
+      // For chat consultations
       setCurrentChat({ messages: [] });
     }
   };
 
+  // Function to end consultation
   const endConsultation = () => {
+    // Stop all media streams
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach(track => track.stop());
@@ -107,6 +158,7 @@ const Teleconsultation: React.FC = () => {
     });
   };
 
+  // Function to send a chat message
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!messageInput.trim()) return;
@@ -124,6 +176,7 @@ const Teleconsultation: React.FC = () => {
 
     setMessageInput('');
 
+    // Simulate doctor response after a short delay
     setTimeout(() => {
       const doctorResponse = {
         id: (Date.now() + 1).toString(),
@@ -138,10 +191,12 @@ const Teleconsultation: React.FC = () => {
     }, 3000);
   };
 
+  // Get doctor information for a consultation
   const getDoctorForConsultation = (doctorId: string) => {
     return filteredDoctors.find(d => d.id === doctorId) || { name: 'Unknown Doctor', avatar: '', specialty: '' };
   };
 
+  // Format date for display
   const formatConsultationDate = (date: Date) => {
     return format(date, 'PPP p');
   };
@@ -185,7 +240,7 @@ const Teleconsultation: React.FC = () => {
                           className="w-full h-64 md:h-80 bg-gray-900 rounded-lg"
                         />
                         <div className="absolute bottom-4 left-4 text-white px-2 py-1 bg-black/50 rounded">
-                          {user?.name || 'You'} (You)
+                          {user?.firstName || 'You'} (You)
                         </div>
                       </div>
                       <div className="relative">
@@ -220,9 +275,9 @@ const Teleconsultation: React.FC = () => {
                       <div className="text-center">
                         <Avatar className="w-32 h-32 mx-auto">
                           <AvatarImage src="" />
-                          <AvatarFallback>{user?.name?.charAt(0) || 'Y'}</AvatarFallback>
+                          <AvatarFallback>{user?.firstName?.charAt(0) || 'Y'}</AvatarFallback>
                         </Avatar>
-                        <div className="mt-2 text-lg font-medium">{user?.name || 'You'} (You)</div>
+                        <div className="mt-2 text-lg font-medium">{user?.firstName || 'You'} (You)</div>
                         <div className="text-sm text-gray-500">Speaking...</div>
                       </div>
                       <div className="text-center">
@@ -476,4 +531,5 @@ const Teleconsultation: React.FC = () => {
   );
 };
 
+// Export with auth HOC
 export default withAuth(Teleconsultation);
