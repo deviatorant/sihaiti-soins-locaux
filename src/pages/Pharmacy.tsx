@@ -17,53 +17,53 @@ const Pharmacy = () => {
 
   // Sample medication categories
   const categories = [
-    "Pain Relief", "Antibiotics", "Cold & Flu", "Allergy", 
-    "Vitamins", "Skin Care", "First Aid", "Diabetes"
+    t('pharmacy.painRelief'), t('pharmacy.antibiotics'), t('pharmacy.coldAndFlu'), t('pharmacy.allergy'), 
+    t('pharmacy.vitamins'), t('pharmacy.skinCare'), t('pharmacy.firstAid'), t('pharmacy.diabetes')
   ];
 
   // Sample medications
   const medications = [
-    { id: 1, name: "Paracetamol 500mg", category: "Pain Relief", price: 5.99, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
-    { id: 2, name: "Amoxicillin 250mg", category: "Antibiotics", price: 12.50, prescription: true, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
-    { id: 3, name: "Cetirizine 10mg", category: "Allergy", price: 8.75, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
-    { id: 4, name: "Vitamin D3 1000IU", category: "Vitamins", price: 15.99, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
-    { id: 5, name: "Cold & Flu Relief", category: "Cold & Flu", price: 7.25, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
-    { id: 6, name: "Hydrocortisone Cream", category: "Skin Care", price: 9.50, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
-    { id: 7, name: "Antiseptic Wipes", category: "First Aid", price: 4.25, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
-    { id: 8, name: "Glucose Test Strips", category: "Diabetes", price: 18.99, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
+    { id: 1, name: t('pharmacy.paracetamol'), category: t('pharmacy.painRelief'), price: 5.99, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
+    { id: 2, name: t('pharmacy.amoxicillin'), category: t('pharmacy.antibiotics'), price: 12.50, prescription: true, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
+    { id: 3, name: t('pharmacy.cetirizine'), category: t('pharmacy.allergy'), price: 8.75, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
+    { id: 4, name: t('pharmacy.vitaminD'), category: t('pharmacy.vitamins'), price: 15.99, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
+    { id: 5, name: t('pharmacy.coldFlu'), category: t('pharmacy.coldAndFlu'), price: 7.25, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
+    { id: 6, name: t('pharmacy.hydrocortisone'), category: t('pharmacy.skinCare'), price: 9.50, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
+    { id: 7, name: t('pharmacy.antisepticWipes'), category: t('pharmacy.firstAid'), price: 4.25, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
+    { id: 8, name: t('pharmacy.glucoseStrips'), category: t('pharmacy.diabetes'), price: 18.99, prescription: false, image: "https://placehold.co/100x100/e2e8f0/64748b?text=Med" },
   ];
 
   // Sample pharmacies
   const pharmacies = [
     { 
       id: 1, 
-      name: "HealthPlus Pharmacy", 
-      address: "123 Medical Blvd, City Center", 
-      distance: "0.8 miles", 
-      hours: "8:00 AM - 10:00 PM",
+      name: t('pharmacy.healthPlus'), 
+      address: t('pharmacy.address1'), 
+      distance: "0.8 km", 
+      hours: "8:00 - 22:00",
       rating: 4.8,
       image: "https://placehold.co/300x200/e2e8f0/64748b?text=Pharmacy",
-      phone: "+1-234-567-8901" 
+      phone: "+212-5-22-12-34-56" 
     },
     { 
       id: 2, 
-      name: "MediCare Pharmacy", 
-      address: "456 Health St, Westside", 
-      distance: "1.2 miles", 
-      hours: "24 hours",
+      name: t('pharmacy.mediCare'), 
+      address: t('pharmacy.address2'), 
+      distance: "1.2 km", 
+      hours: "24/24",
       rating: 4.6,
       image: "https://placehold.co/300x200/e2e8f0/64748b?text=Pharmacy",
-      phone: "+1-234-567-8902" 
+      phone: "+212-5-22-23-45-67" 
     },
     { 
       id: 3, 
-      name: "QuickRx Pharmacy", 
-      address: "789 Wellness Ave, Eastside", 
-      distance: "1.5 miles", 
-      hours: "7:00 AM - 11:00 PM",
+      name: t('pharmacy.quickRx'), 
+      address: t('pharmacy.address3'), 
+      distance: "1.5 km", 
+      hours: "7:00 - 23:00",
       rating: 4.7,
       image: "https://placehold.co/300x200/e2e8f0/64748b?text=Pharmacy",
-      phone: "+1-234-567-8903" 
+      phone: "+212-5-22-34-56-78" 
     },
   ];
 
@@ -184,7 +184,7 @@ const Pharmacy = () => {
                             <div key={item.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                               <div className="flex-1">
                                 <p className="text-sm font-medium">{item.name}</p>
-                                <p className="text-xs text-gray-500">${item.price} × {item.quantity}</p>
+                                <p className="text-xs text-gray-500">{item.price} MAD × {item.quantity}</p>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Button 
@@ -211,7 +211,7 @@ const Pharmacy = () => {
                         <div className="mt-4 pt-3 border-t">
                           <div className="flex justify-between mb-4">
                             <span className="font-medium">{t('pharmacy.total')}</span>
-                            <span className="font-bold">${getTotalPrice()}</span>
+                            <span className="font-bold">{getTotalPrice()} MAD</span>
                           </div>
                           <Button 
                             className="w-full bg-medical-blue hover:bg-medical-blue/90"
@@ -256,7 +256,7 @@ const Pharmacy = () => {
                                 <h3 className="font-medium">{medication.name}</h3>
                                 <p className="text-sm text-gray-500">{medication.category}</p>
                                 <div className="flex items-center justify-between mt-2">
-                                  <span className="font-bold text-medical-blue">${medication.price}</span>
+                                  <span className="font-bold text-medical-blue">{medication.price} MAD</span>
                                   {medication.prescription ? (
                                     <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                                       {t('pharmacy.prescriptionRequired')}

@@ -34,7 +34,9 @@ const ServiceCard = ({
         !isEmergency && !isTeleconsultation && !isHomecare && "bg-white border border-gray-200",
         isRTL ? "text-right" : "text-left",
         // Handle border direction for RTL
-        isRTL && "border-r-4 border-l-0"
+        isRTL && isEmergency && "border-r-4 border-l-0 border-medical-red",
+        isRTL && isTeleconsultation && "border-r-4 border-l-0 border-medical-blue",
+        isRTL && isHomecare && "border-r-4 border-l-0 border-medical-green"
       )}
       onClick={onClick}
       role="button"

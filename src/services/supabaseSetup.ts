@@ -8,24 +8,42 @@ export const setupAmbulanceAndPharmacyTables = async () => {
   
   try {
     // Check if tables exist
-    const { data: tables } = await supabase.rpc('get_tables');
+    const { data: tables, error: tablesError } = await supabase.rpc('get_tables');
+    
+    if (tablesError) {
+      console.error('Error fetching tables:', tablesError);
+      return;
+    }
+    
     const hasAmbulanceRequests = tables?.includes('ambulance_requests');
     const hasMedicationOrders = tables?.includes('medication_orders');
     const hasUserCalendarSettings = tables?.includes('user_calendar_settings');
     
     if (!hasAmbulanceRequests) {
       console.log('Creating ambulance_requests table');
-      // In production, you would run the appropriate SQL
+      const { error } = await supabase.from('ambulance_requests').select('id').limit(1);
+      if (error && error.code === '42P01') { // Table doesn't exist
+        // In production, run the SQL from supabase-tables-setup.sql
+        console.log('Table ambulance_requests does not exist, would create it in production');
+      }
     }
     
     if (!hasMedicationOrders) {
       console.log('Creating medication_orders table');
-      // In production, you would run the appropriate SQL
+      const { error } = await supabase.from('medication_orders').select('id').limit(1);
+      if (error && error.code === '42P01') { // Table doesn't exist
+        // In production, run the SQL from supabase-tables-setup.sql
+        console.log('Table medication_orders does not exist, would create it in production');
+      }
     }
     
     if (!hasUserCalendarSettings) {
       console.log('Creating user_calendar_settings table');
-      // In production, you would run the appropriate SQL
+      const { error } = await supabase.from('user_calendar_settings').select('user_id').limit(1);
+      if (error && error.code === '42P01') { // Table doesn't exist
+        // In production, run the SQL from supabase-tables-setup.sql
+        console.log('Table user_calendar_settings does not exist, would create it in production');
+      }
     }
     
     console.log('Ambulance and pharmacy tables setup completed');
@@ -38,7 +56,12 @@ export const setupAmbulanceAndPharmacyTables = async () => {
 export const setupStorageBuckets = async () => {
   try {
     // Check if buckets exist before trying to create them
-    const { data: buckets } = await supabase.storage.listBuckets();
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('Error listing buckets:', bucketsError);
+      return;
+    }
     
     const hasMedicalFilesBucket = buckets?.some(bucket => bucket.name === 'medical-files');
     const hasPrescriptionsBucket = buckets?.some(bucket => bucket.name === 'prescriptions');

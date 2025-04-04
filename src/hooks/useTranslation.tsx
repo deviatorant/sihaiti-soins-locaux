@@ -18,15 +18,15 @@ const TranslationContext = createContext<TranslationContextType | undefined>(und
 
 // Provider component
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize with browser language or default to English
+  // Initialize with French by default
   const [language, setLanguage] = useState<LanguageCode>(() => {
     const savedLang = localStorage.getItem('sihati_language');
     if (savedLang && ['en', 'fr', 'ar'].includes(savedLang)) {
       return savedLang as LanguageCode;
     }
     
-    const browserLang = navigator.language.split('-')[0];
-    return (browserLang === 'fr' || browserLang === 'ar') ? browserLang as LanguageCode : 'en';
+    // Default to French instead of browser language
+    return 'fr' as LanguageCode;
   });
   
   // Save language preference to both localStorage and Supabase if user is authenticated
@@ -49,7 +49,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     updateUserLanguagePreference().catch(console.error);
   }, [language]);
 
-  // Translation function with optional parameter interpolation
+  // Translation function with improved fallback
   const t = (key: string, params?: Record<string, string>): string => {
     const keys = key.split('.');
     let value: any = translationData[language];
@@ -59,7 +59,9 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         value = value[k];
       } else {
         console.warn(`Translation key not found: ${key}`);
-        return key.split('.').pop() || key;
+        // Return key last part as fallback instead of showing translation keys
+        const lastKeyPart = key.split('.').pop() || key;
+        return lastKeyPart;
       }
     }
     
@@ -70,7 +72,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }, value);
     }
     
-    return value;
+    return typeof value === 'string' ? value : key.split('.').pop() || key;
   };
 
   return (
