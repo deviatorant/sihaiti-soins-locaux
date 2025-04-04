@@ -10,7 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "@/hooks/use-toast";
-import { Facebook, Mail, Phone, Smartphone, User } from "lucide-react";
+import { Mail, Phone, User } from "lucide-react";
+import CryptoJS from 'crypto-js';
+
+const MOROCCO_PHONE_PREFIX = "+212";
+const DEFAULT_LOCALE = "ar-MA";
 
 const Login = () => {
   const { t, isRTL } = useTranslation();
@@ -23,6 +27,21 @@ const Login = () => {
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const formatMoroccanPhoneNumber = (phone: string): string => {
+    if (phone.startsWith('+')) return phone;
+    
+    // Remove leading 0 if present
+    const normalizedPhone = phone.startsWith('0') ? phone.substring(1) : phone;
+    
+    // Add Morocco's country code
+    return `${MOROCCO_PHONE_PREFIX}${normalizedPhone}`;
+  };
+  
+  const encryptToken = (token: string): string => {
+    const SECRET_KEY = 'SIHATI_APP_SECRET_KEY';
+    return CryptoJS.AES.encrypt(token, SECRET_KEY).toString();
+  };
   
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,10 +67,8 @@ const Login = () => {
   const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Format phone number (ensure it has country code)
-    const formattedPhone = phoneNumber.startsWith('+') 
-      ? phoneNumber 
-      : `+212${phoneNumber.startsWith('0') ? phoneNumber.substring(1) : phoneNumber}`;
+    // Format phone number for Morocco
+    const formattedPhone = formatMoroccanPhoneNumber(phoneNumber);
     
     if (!isOtpSent) {
       setIsLoading(true);
