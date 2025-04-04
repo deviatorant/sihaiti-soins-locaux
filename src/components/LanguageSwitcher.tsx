@@ -11,12 +11,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const LanguageSwitcher = () => {
-  const { language, setLanguage, t } = useTranslation();
+  const { language, setLanguage } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
 
   const languages = [
-    { code: 'fr', label: 'Français', flag: '🇫🇷' },
-    { code: 'ar', label: 'العربية', flag: '🇲🇦' },
-    { code: 'en', label: 'English', flag: '🇬🇧' }
+    { code: 'fr', label: 'Français' },
+    { code: 'ar', label: 'العربية' },
+    { code: 'en', label: 'English' }
   ];
 
   return (
@@ -24,24 +25,23 @@ const LanguageSwitcher = () => {
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
-          size="sm"
-          className="rounded-full flex items-center justify-center gap-1.5 hover:bg-gray-100/50 transition-colors"
+          size="icon"
+          className="rounded-full flex items-center justify-center gap-2 hover:bg-gray-100"
         >
-          <Globe className="h-4 w-4 text-gray-700" />
-          <span className="text-xs font-medium uppercase hidden sm:inline-block">
+          <Globe className="h-5 w-5 text-gray-700" />
+          <span className="text-xs font-semibold uppercase">
             {language}
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-36">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
-            className={`cursor-pointer flex items-center space-x-2 ${language === lang.code ? 'font-bold bg-gray-100' : ''}`}
+            className={`cursor-pointer ${language === lang.code ? 'font-bold bg-gray-100' : ''}`}
             onClick={() => setLanguage(lang.code as any)}
           >
-            <span className="text-base mr-2">{lang.flag}</span>
-            <span>{lang.label}</span>
+            {lang.label}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

@@ -1,13 +1,14 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { TranslationProvider } from "@/hooks/useTranslation";
-import { AuthProvider } from "@/providers/AuthProvider";
+import { AuthProvider } from "@/hooks/useAuth";
 import { DoctorsProvider } from "@/hooks/useDoctors";
 import { useEffect } from "react";
-import { initializeAllServices } from "@/services/supabase";
+import { setupDatabase } from "@/services/supabase";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -32,6 +33,7 @@ const queryClient = new QueryClient({
   },
 });
 
+// Component to handle setup when the app first loads
 const AppSetup = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,13 +41,15 @@ const AppSetup = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        await initializeAllServices();
+        // Setup database tables if needed
+        await setupDatabase();
         console.log('App initialization complete');
       } catch (error) {
         console.error('Error initializing app:', error);
       }
     };
     
+    // Only run setup if we're on the main page
     if (location.pathname === '/') {
       initializeApp();
     }

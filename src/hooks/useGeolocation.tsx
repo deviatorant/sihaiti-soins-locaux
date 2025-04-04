@@ -10,7 +10,6 @@ interface GeolocationPosition {
 interface UseGeolocationResult {
   position: GeolocationPosition | null;
   error: string | null;
-  positionError: GeolocationPositionError | null; // Add this property
   loading: boolean;
   getPosition: () => Promise<GeolocationPosition>;
 }
@@ -18,7 +17,6 @@ interface UseGeolocationResult {
 export function useGeolocation(): UseGeolocationResult {
   const [position, setPosition] = useState<GeolocationPosition | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [positionError, setPositionError] = useState<GeolocationPositionError | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Function to get current position
@@ -26,7 +24,6 @@ export function useGeolocation(): UseGeolocationResult {
     return new Promise((resolve, reject) => {
       setLoading(true);
       setError(null);
-      setPositionError(null);
 
       if (!navigator.geolocation) {
         const errorMessage = 'Geolocation is not supported by your browser';
@@ -49,8 +46,6 @@ export function useGeolocation(): UseGeolocationResult {
         },
         (error) => {
           let errorMessage: string;
-          
-          setPositionError(error);
           
           switch (error.code) {
             case error.PERMISSION_DENIED:
@@ -80,7 +75,7 @@ export function useGeolocation(): UseGeolocationResult {
     getPosition().catch(() => {}); // Catch to prevent unhandled rejection
   }, []);
 
-  return { position, error, positionError, loading, getPosition };
+  return { position, error, loading, getPosition };
 }
 
 // Fallback geocoding function using OpenStreetMap Nominatim (in case user enters address)
