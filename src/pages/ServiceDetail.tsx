@@ -2,18 +2,20 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useToast } from "@/hooks/use-toast";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Calendar, Clock, MapPin, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, MapPin, ArrowLeft, Check } from "lucide-react";
 
 const ServiceDetail = () => {
   const { serviceType } = useParams<{ serviceType: string }>();
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [address, setAddress] = useState("");
@@ -81,8 +83,16 @@ const ServiceDetail = () => {
     });
     
     // Here would be the actual booking logic
-    alert(t('services.bookingSuccess'));
-    navigate("/services");
+    toast({
+      title: t('services.bookingSuccess'),
+      description: t('services.bookingConfirmation'),
+      variant: "success"
+    });
+    
+    // Redirect to services page after booking
+    setTimeout(() => {
+      navigate("/services");
+    }, 1500);
   };
 
   const handleBack = () => {
@@ -180,8 +190,9 @@ const ServiceDetail = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-medical-blue hover:bg-medical-blue/90"
+                className="w-full bg-medical-blue hover:bg-medical-blue/90 flex items-center justify-center gap-2"
               >
+                <Check size={18} />
                 {t('services.book')}
               </Button>
             </form>

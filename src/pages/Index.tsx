@@ -63,7 +63,7 @@ const Index = () => {
           title: t('services.homecare'),
           description: t('services.homecareDesc'),
           icon: HomeIcon,
-          path: "/services/homecare",
+          path: "/service/homecare",
           isHomecare: true,
           isTeleconsultation: false,
           isEmergency: false
@@ -73,7 +73,7 @@ const Index = () => {
           title: t('services.physiotherapy'),
           description: t('services.physiotherapyDesc'),
           icon: Activity,
-          path: "/services/physiotherapy",
+          path: "/service/physiotherapy",
           isHomecare: true,
           isTeleconsultation: false,
           isEmergency: false
@@ -83,7 +83,7 @@ const Index = () => {
           title: t('services.bloodTest'),
           description: t('services.bloodTestDesc'),
           icon: HeartPulse,
-          path: "/services/bloodtest",
+          path: "/service/blood-test",
           isHomecare: true,
           isTeleconsultation: false,
           isEmergency: false
@@ -93,7 +93,7 @@ const Index = () => {
           title: t('services.nursing'),
           description: t('services.nursingDesc'),
           icon: Stethoscope,
-          path: "/services/nursing",
+          path: "/service/nursing",
           isHomecare: true,
           isTeleconsultation: false,
           isEmergency: false
