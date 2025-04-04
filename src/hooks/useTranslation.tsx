@@ -47,6 +47,18 @@ const translations: Translations = {
     fr: 'Profil',
     ar: 'الملف الشخصي'
   },
+  'nav.pharmacy': {
+    fr: 'Pharmacie',
+    ar: 'صيدلية'
+  },
+  'nav.homecare': {
+    fr: 'Soins à domicile',
+    ar: 'الرعاية المنزلية'
+  },
+  'nav.teleconsultation': {
+    fr: 'Téléconsultation',
+    ar: 'الاستشارة عن بعد'
+  },
   
   // Authentication
   'auth.login': {
@@ -227,6 +239,10 @@ const translations: Translations = {
   },
   
   // Appointments
+  'appointments.title': {
+    fr: 'Mes Rendez-vous',
+    ar: 'مواعيدي'
+  },
   'appointments.book': {
     fr: 'Prendre rendez-vous',
     ar: 'حجز موعد'
@@ -254,6 +270,114 @@ const translations: Translations = {
   'appointments.type': {
     fr: 'Type',
     ar: 'النوع'
+  },
+  'appointments.confirmed': {
+    fr: 'Confirmé',
+    ar: 'مؤكد'
+  },
+  'appointments.completed': {
+    fr: 'Terminé',
+    ar: 'منتهي'
+  },
+  'appointments.cancelled': {
+    fr: 'Annulé',
+    ar: 'ملغى'
+  },
+  'appointments.inPerson': {
+    fr: 'En personne',
+    ar: 'حضوري'
+  },
+  'appointments.video': {
+    fr: 'Vidéo',
+    ar: 'فيديو'
+  },
+  'appointments.cancel': {
+    fr: 'Annuler',
+    ar: 'إلغاء'
+  },
+  'appointments.searchDoctor': {
+    fr: 'Rechercher un médecin',
+    ar: 'البحث عن طبيب'
+  },
+  'appointments.searchPlaceholder': {
+    fr: 'Nom, spécialité ou lieu...',
+    ar: 'الاسم، التخصص أو الموقع...'
+  },
+  'appointments.specialty': {
+    fr: 'Spécialité',
+    ar: 'التخصص'
+  },
+  'appointments.allSpecialties': {
+    fr: 'Toutes les spécialités',
+    ar: 'جميع التخصصات'
+  },
+  'appointments.specialties.cardiologist': {
+    fr: 'Cardiologue',
+    ar: 'طبيب القلب'
+  },
+  'appointments.specialties.dermatologist': {
+    fr: 'Dermatologue',
+    ar: 'طبيب الجلدية'
+  },
+  'appointments.specialties.gp': {
+    fr: 'Médecin généraliste',
+    ar: 'طبيب عام'
+  },
+  'appointments.specialties.pediatrician': {
+    fr: 'Pédiatre',
+    ar: 'طبيب الأطفال'
+  },
+  'appointments.selectType': {
+    fr: 'Sélectionner un type',
+    ar: 'اختر النوع'
+  },
+  'appointments.availableDoctors': {
+    fr: 'Médecins disponibles',
+    ar: 'الأطباء المتاحون'
+  },
+  'appointments.noDoctorsFound': {
+    fr: 'Aucun médecin trouvé pour ces critères',
+    ar: 'لم يتم العثور على أطباء لهذه المعايير'
+  },
+  'appointments.scheduleNew': {
+    fr: 'Planifier un nouveau rendez-vous',
+    ar: 'تحديد موعد جديد'
+  },
+  'appointments.selectDate': {
+    fr: 'Sélectionner une date',
+    ar: 'اختر تاريخًا'
+  },
+  'appointments.selectTime': {
+    fr: 'Sélectionner une heure',
+    ar: 'اختر وقتًا'
+  },
+  'appointments.selectTimeSlot': {
+    fr: 'Cliquez sur un créneau horaire',
+    ar: 'انقر على فترة زمنية'
+  },
+  'appointments.notesPlaceholder': {
+    fr: 'Raison de la consultation, symptômes, questions...',
+    ar: 'سبب الاستشارة، الأعراض، الأسئلة...'
+  },
+  'appointments.confirmBooking': {
+    fr: 'Confirmer la réservation',
+    ar: 'تأكيد الحجز'
+  },
+  'appointments.noUpcoming': {
+    fr: 'Vous n\'avez pas de rendez-vous à venir',
+    ar: 'ليس لديك مواعيد قادمة'
+  },
+  'appointments.noPast': {
+    fr: 'Vous n\'avez pas de rendez-vous passés',
+    ar: 'ليس لديك مواعيد سابقة'
+  },
+  'appointments.bookNew': {
+    fr: 'Prendre un nouveau rendez-vous',
+    ar: 'حجز موعد جديد'
+  },
+  'appointments.availableToday': {
+    fr: 'Disponible aujourd\'hui',
+    ar: 'متاح اليوم'
   },
   
   // Shop
@@ -298,6 +422,116 @@ const translations: Translations = {
   'doctors.availability': {
     fr: 'Disponibilité',
     ar: 'التوفر'
+  },
+  
+  // Teleconsultation
+  'teleconsultation.video': {
+    fr: 'Vidéo',
+    ar: 'فيديو'
+  },
+  'teleconsultation.audio': {
+    fr: 'Audio',
+    ar: 'صوت'
+  },
+  'teleconsultation.message': {
+    fr: 'Message',
+    ar: 'رسالة'
+  },
+  'teleconsultation.videoTitle': {
+    fr: 'Consultation vidéo',
+    ar: 'استشارة بالفيديو'
+  },
+  'teleconsultation.videoDescription': {
+    fr: 'Consultez un médecin par vidéo pour un diagnostic visuel complet',
+    ar: 'استشر طبيبًا عبر الفيديو للحصول على تشخيص بصري كامل'
+  },
+  'teleconsultation.audioTitle': {
+    fr: 'Consultation audio',
+    ar: 'استشارة صوتية'
+  },
+  'teleconsultation.audioDescription': {
+    fr: 'Consultez un médecin par appel audio si vous préférez plus de confidentialité',
+    ar: 'استشر طبيبًا عبر مكالمة صوتية إذا كنت تفضل المزيد من الخصوصية'
+  },
+  'teleconsultation.messageTitle': {
+    fr: 'Consultation par message',
+    ar: 'استشارة عبر الرسائل'
+  },
+  'teleconsultation.messageDescription': {
+    fr: 'Consultez un médecin par message texte si vous préférez communiquer par écrit',
+    ar: 'استشر طبيبًا عبر الرسائل النصية إذا كنت تفضل التواصل كتابيًا'
+  },
+  'teleconsultation.cameraPlaceholder': {
+    fr: 'La caméra s\'activera lors de la consultation',
+    ar: 'سيتم تفعيل الكاميرا أثناء الاستشارة'
+  },
+  'teleconsultation.audioPlaceholder': {
+    fr: 'L\'audio s\'activera lors de la consultation',
+    ar: 'سيتم تفعيل الصوت أثناء الاستشارة'
+  },
+  'teleconsultation.messagePlaceholder': {
+    fr: 'Bonjour, comment puis-je vous aider aujourd\'hui?',
+    ar: 'مرحبًا، كيف يمكنني مساعدتك اليوم؟'
+  },
+  'teleconsultation.availableDoctors': {
+    fr: 'Médecins disponibles',
+    ar: 'الأطباء المتاحون'
+  },
+  'teleconsultation.select': {
+    fr: 'Sélectionner',
+    ar: 'اختيار'
+  },
+  'teleconsultation.requirements': {
+    fr: 'Prérequis techniques',
+    ar: 'المتطلبات التقنية'
+  },
+  'teleconsultation.requirementCamera': {
+    fr: 'Caméra fonctionnelle',
+    ar: 'كاميرا تعمل بشكل جيد'
+  },
+  'teleconsultation.requirementMicrophone': {
+    fr: 'Microphone fonctionnel',
+    ar: 'ميكروفون يعمل بشكل جيد'
+  },
+  'teleconsultation.requirementInternet': {
+    fr: 'Connexion Internet stable',
+    ar: 'اتصال إنترنت مستقر'
+  },
+  'teleconsultation.startVideoConsultation': {
+    fr: 'Démarrer la consultation vidéo',
+    ar: 'بدء الاستشارة بالفيديو'
+  },
+  'teleconsultation.startAudioConsultation': {
+    fr: 'Démarrer la consultation audio',
+    ar: 'بدء الاستشارة الصوتية'
+  },
+  'teleconsultation.startMessageConsultation': {
+    fr: 'Démarrer la consultation par message',
+    ar: 'بدء الاستشارة عبر الرسائل'
+  },
+  'teleconsultation.typeMessage': {
+    fr: 'Tapez votre message...',
+    ar: 'اكتب رسالتك...'
+  },
+  'teleconsultation.send': {
+    fr: 'Envoyer',
+    ar: 'إرسال'
+  },
+  'teleconsultation.benefits': {
+    fr: 'Avantages',
+    ar: 'المزايا'
+  },
+  'teleconsultation.benefitConvenient': {
+    fr: 'Pratique et accessible à tout moment',
+    ar: 'مريح ومتاح في أي وقت'
+  },
+  'teleconsultation.benefitDiscreet': {
+    fr: 'Discret et confidentiel',
+    ar: 'سري وخصوصي'
+  },
+  'teleconsultation.benefitFlexible': {
+    fr: 'Flexible selon votre emploi du temps',
+    ar: 'مرن حسب جدولك الزمني'
   },
   
   // General
