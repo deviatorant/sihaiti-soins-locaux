@@ -24,6 +24,11 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
   isLoggedIn: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  loginWithPhone: (phone: string, otp: string) => Promise<boolean>;
+  loginWithGoogle: () => Promise<void>;
+  loginWithFacebook: () => Promise<void>;
+  sendOTP: (phone: string) => Promise<boolean>;
 };
 
 // Create context
@@ -50,6 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: session.user.id,
             email: session.user.email,
             phone: session.user.phone,
+            name: session.user.user_metadata?.name,
             // Additional user data can be fetched from user profiles table
           });
           setIsLoggedIn(true);
@@ -79,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: session.user.id,
             email: session.user.email,
             phone: session.user.phone,
+            name: session.user.user_metadata?.name,
           });
           setIsLoggedIn(true);
         } else {
@@ -95,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [t]);
 
   // Sign in with email and password
-  const signIn = async (email: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -122,8 +129,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Sign in alias for consistency
+  const signIn = login;
+
   // Sign in with OTP via SMS
-  const signInWithOTP = async (phone: string) => {
+  const sendOTP = async (phone: string) => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         phone,
@@ -176,6 +186,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: "destructive",
       });
       return false;
+    }
+  };
+
+  // Login with phone - alias for verifyOTP
+  const loginWithPhone = verifyOTP;
+
+  // Sign in with Google
+  const loginWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Error signing in with Google:', error.message);
+      toast({
+        title: t('login.loginError'),
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Sign in with Facebook
+  const loginWithFacebook = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Error signing in with Facebook:', error.message);
+      toast({
+        title: t('login.loginError'),
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -255,12 +304,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     loading,
     signIn,
-    signInWithOTP,
+    signInWithOTP: sendOTP,
     verifyOTP,
     signUp,
     signOut,
     continueAsGuest,
     isLoggedIn,
+    login,
+    loginWithPhone,
+    loginWithGoogle,
+    loginWithFacebook,
+    sendOTP,
   };
 
   return (
