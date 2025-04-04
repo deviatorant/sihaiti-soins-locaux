@@ -8,9 +8,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useEffect } from "react";
 
 const LanguageSwitcher = () => {
   const { language, setLanguage, t } = useTranslation();
+
+  // Log current language on mount and when language changes
+  useEffect(() => {
+    console.log("Current language:", language);
+  }, [language]);
 
   const languages = [
     { code: 'fr', label: 'Français', flag: '🇫🇷' },

@@ -2,6 +2,7 @@
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useEffect } from "react";
 
 interface ServiceCardProps {
   title: string;
@@ -22,7 +23,12 @@ const ServiceCard = ({
   isHomecare = false,
   onClick
 }: ServiceCardProps) => {
-  const { isRTL } = useTranslation();
+  const { isRTL, language } = useTranslation();
+  
+  // Log service card info for debugging
+  useEffect(() => {
+    console.log(`Service Card - Title: ${title}, Description: ${description}, Lang: ${language}`);
+  }, [title, description, language]);
   
   return (
     <div 

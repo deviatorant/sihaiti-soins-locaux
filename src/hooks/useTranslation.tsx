@@ -18,7 +18,7 @@ const TranslationContext = createContext<TranslationContextType | undefined>(und
 
 // Provider component
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize with French by default - force default to French
+  // Always initialize with French by default
   const [language, setLanguage] = useState<LanguageCode>('fr');
   
   // Set language preference based on localStorage on mount, but still default to French
@@ -30,6 +30,10 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // Default to French and save to localStorage
       localStorage.setItem('sihati_language', 'fr');
     }
+    
+    // Set document lang and dir attributes
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
   }, []);
   
   // Save language preference to both localStorage and Supabase if user is authenticated
