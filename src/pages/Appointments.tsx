@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import NavBar from "@/components/NavBar";
@@ -124,7 +123,6 @@ const Appointments = () => {
   });
   
   const handleBookAppointment = (doctorId: number) => {
-    // Implementation would handle the actual booking
     console.log(`Booking appointment with doctor ID: ${doctorId}`);
     toast({
       title: "Appointment Request Sent",
@@ -134,7 +132,6 @@ const Appointments = () => {
   };
   
   const handleCancelAppointment = (appointmentId: number) => {
-    // Implementation would handle the cancellation
     console.log(`Cancelling appointment ID: ${appointmentId}`);
     toast({
       title: "Appointment Cancelled",
@@ -228,7 +225,10 @@ const Appointments = () => {
           variant="outline"
           className="m-1"
           onClick={() => {
-            document.getElementById("time-slot-input")?.setAttribute("value", `${hour}:00`);
+            const timeSlotInput = document.getElementById("time-slot-input");
+            if (timeSlotInput instanceof HTMLInputElement) {
+              timeSlotInput.value = `${hour}:00`;
+            }
           }}
         >
           {hour}:00
@@ -241,7 +241,10 @@ const Appointments = () => {
             variant="outline"
             className="m-1"
             onClick={() => {
-              document.getElementById("time-slot-input")?.setAttribute("value", `${hour}:30`);
+              const timeSlotInput = document.getElementById("time-slot-input");
+              if (timeSlotInput instanceof HTMLInputElement) {
+                timeSlotInput.value = `${hour}:30`;
+              }
             }}
           >
             {hour}:30
@@ -300,6 +303,12 @@ const Appointments = () => {
     );
   };
   
+  const handleTabChange = (value: string) => {
+    if (value === "book") {
+      // No need to do anything special here
+    }
+  };
+  
   return (
     <div className={`min-h-screen bg-gray-50 ${isRTL ? 'rtl' : 'ltr'}`}>
       <NavBar />
@@ -309,7 +318,7 @@ const Appointments = () => {
           {t('appointments.title')}
         </h1>
         
-        <Tabs defaultValue="book" className="w-full">
+        <Tabs defaultValue="book" className="w-full" onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="book">{t('appointments.book')}</TabsTrigger>
             <TabsTrigger value="upcoming">{t('appointments.upcoming')}</TabsTrigger>
@@ -463,4 +472,3 @@ const Appointments = () => {
 };
 
 export default Appointments;
-

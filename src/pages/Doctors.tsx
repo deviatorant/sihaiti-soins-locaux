@@ -1,620 +1,646 @@
 
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGeolocation } from "@/hooks/useGeolocation";
-import { useToast } from "@/hooks/use-toast";
 import NavBar from "@/components/NavBar";
+import LocationMap from "@/components/LocationMap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import LocationMap from "@/components/LocationMap";
-import Fuse from "fuse.js";
-import { 
-  Search, 
-  MapPin, 
-  Filter, 
-  Star, 
-  Calendar, 
-  Clock, 
-  User, 
-  MessageCircle,
-  Globe,
-  CreditCard,
-  CheckCircle2
-} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
+import { MapPin, Search, Star, Clock, Filter, Calendar, Phone, Video } from "lucide-react";
+import Fuse from 'fuse.js';
 
-// Sample doctor data (in a real app, this would come from a database)
-const DOCTORS_DATA = [
+// Mock data
+const doctorsData = [
   {
-    id: "dr-1",
-    name: "Dr. Sarah Benali",
-    specialty: "Cardiology",
-    subSpecialty: "Interventional Cardiology",
+    id: 1,
+    name: "Dr. Sarah Johnson",
+    specialty: "Cardiologist",
     languages: ["Arabic", "French", "English"],
+    location: "Casablanca",
     address: "123 Medical Center, Casablanca",
-    availability: ["Monday", "Wednesday", "Friday"],
-    immediate: true,
-    insurance: ["CNOPS", "CNSS", "Private"],
-    rating: 4.8,
-    reviewCount: 56,
-    latitude: 33.5731,
-    longitude: -7.5898,
-    image: "https://randomuser.me/api/portraits/women/45.jpg",
-    price: 400,
-    waitTime: "2-3 days"
+    rating: 4.9,
+    reviewCount: 145,
+    availableToday: true,
+    acceptingNewPatients: true,
+    education: "Harvard Medical School",
+    experience: "15 years",
+    avatar: "https://randomuser.me/api/portraits/women/65.jpg",
+    insurances: ["CNOPS", "CNSS", "RMA"],
+    coordinates: { lat: 33.5992, lng: -7.6201 },
+    distance: 0, // Will be calculated based on user location
+    availableSlots: [
+      { date: "2025-04-05", slots: ["09:00", "11:30", "14:00"] },
+      { date: "2025-04-06", slots: ["10:00", "15:30"] },
+    ]
   },
   {
-    id: "dr-2",
-    name: "Dr. Mohammed El Amrani",
-    specialty: "Pediatrics",
-    subSpecialty: "Neonatology",
+    id: 2,
+    name: "Dr. Mohammed Al-Fassi",
+    specialty: "Pediatrician",
     languages: ["Arabic", "French"],
+    location: "Rabat",
     address: "456 Children's Clinic, Rabat",
-    availability: ["Monday", "Tuesday", "Thursday"],
-    immediate: false,
-    insurance: ["CNOPS", "Private"],
-    rating: 4.9,
-    reviewCount: 94,
-    latitude: 34.0209,
-    longitude: -6.8416,
-    image: "https://randomuser.me/api/portraits/men/32.jpg",
-    price: 350,
-    waitTime: "1 week"
+    rating: 4.8,
+    reviewCount: 120,
+    availableToday: false,
+    acceptingNewPatients: true,
+    education: "Université de Rabat",
+    experience: "10 years",
+    avatar: "https://randomuser.me/api/portraits/men/42.jpg",
+    insurances: ["CNSS", "Saham Assurance"],
+    coordinates: { lat: 34.0209, lng: -6.8416 },
+    distance: 0,
+    availableSlots: [
+      { date: "2025-04-06", slots: ["14:00", "16:30"] },
+      { date: "2025-04-07", slots: ["09:30", "11:00", "15:00"] },
+    ]
   },
   {
-    id: "dr-3",
-    name: "Dr. Laila Tazi",
-    specialty: "Dermatology",
-    subSpecialty: "Cosmetic Dermatology",
-    languages: ["Arabic", "French", "English", "Spanish"],
+    id: 3,
+    name: "Dr. Fatima Benali",
+    specialty: "Dermatologist",
+    languages: ["Arabic", "French", "English"],
+    location: "Marrakech",
     address: "789 Skin Health Center, Marrakech",
-    availability: ["Tuesday", "Thursday", "Saturday"],
-    immediate: true,
-    insurance: ["CNOPS", "CNSS", "Private"],
     rating: 4.7,
-    reviewCount: 73,
-    latitude: 31.6295,
-    longitude: -7.9811,
-    image: "https://randomuser.me/api/portraits/women/33.jpg",
-    price: 450,
-    waitTime: "Same day"
+    reviewCount: 98,
+    availableToday: true,
+    acceptingNewPatients: true,
+    education: "Université de Casablanca",
+    experience: "8 years",
+    avatar: "https://randomuser.me/api/portraits/women/33.jpg",
+    insurances: ["CNOPS", "Wafa Assurance"],
+    coordinates: { lat: 31.6295, lng: -7.9811 },
+    distance: 0,
+    availableSlots: [
+      { date: "2025-04-05", slots: ["10:30", "13:00", "16:00"] },
+      { date: "2025-04-08", slots: ["09:00", "14:30"] },
+    ]
   },
   {
-    id: "dr-4",
-    name: "Dr. Karim Berrada",
-    specialty: "Orthopedics",
-    subSpecialty: "Sports Medicine",
-    languages: ["Arabic", "French", "English"],
-    address: "101 Bone & Joint Clinic, Tangier",
-    availability: ["Monday", "Wednesday", "Friday", "Saturday"],
-    immediate: false,
-    insurance: ["CNSS", "Private"],
+    id: 4,
+    name: "Dr. Karim Idrissi",
+    specialty: "General Practitioner",
+    languages: ["Arabic", "French", "Amazigh"],
+    location: "Agadir",
+    address: "101 Family Health, Agadir",
     rating: 4.6,
-    reviewCount: 48,
-    latitude: 35.7595,
-    longitude: -5.8340,
-    image: "https://randomuser.me/api/portraits/men/72.jpg",
-    price: 500,
-    waitTime: "3-4 days"
+    reviewCount: 85,
+    availableToday: true,
+    acceptingNewPatients: false,
+    education: "Université Mohammed V",
+    experience: "12 years",
+    avatar: "https://randomuser.me/api/portraits/men/76.jpg",
+    insurances: ["CNSS", "MGEN"],
+    coordinates: { lat: 30.4278, lng: -9.5982 },
+    distance: 0,
+    availableSlots: [
+      { date: "2025-04-05", slots: ["08:30", "11:00", "15:30"] },
+      { date: "2025-04-07", slots: ["10:00", "13:30", "16:00"] },
+    ]
   },
   {
-    id: "dr-5",
-    name: "Dr. Fatima Zahra El Mansouri",
-    specialty: "Obstetrics & Gynecology",
-    subSpecialty: "Maternal-Fetal Medicine",
-    languages: ["Arabic", "French", "English"],
-    address: "202 Women's Health Center, Agadir",
-    availability: ["Monday", "Tuesday", "Thursday", "Friday"],
-    immediate: true,
-    insurance: ["CNOPS", "CNSS", "Private"],
+    id: 5,
+    name: "Dr. Leila Tazi",
+    specialty: "Gynecologist",
+    languages: ["Arabic", "French"],
+    location: "Casablanca",
+    address: "202 Women's Health Clinic, Casablanca",
     rating: 4.9,
-    reviewCount: 129,
-    latitude: 30.4278,
-    longitude: -9.5981,
-    image: "https://randomuser.me/api/portraits/women/65.jpg",
-    price: 400,
-    waitTime: "2 days"
+    reviewCount: 156,
+    availableToday: false,
+    acceptingNewPatients: true,
+    education: "McGill University",
+    experience: "14 years",
+    avatar: "https://randomuser.me/api/portraits/women/45.jpg",
+    insurances: ["CNOPS", "CNSS", "Axa Assurance"],
+    coordinates: { lat: 33.5731, lng: -7.5898 },
+    distance: 0,
+    availableSlots: [
+      { date: "2025-04-06", slots: ["09:00", "11:30", "14:00"] },
+      { date: "2025-04-07", slots: ["10:00", "15:30"] },
+    ]
   }
 ];
 
-// List of medical specialties
-const SPECIALTIES = [
-  { id: "cardiology", name: "Cardiology" },
-  { id: "dermatology", name: "Dermatology" },
-  { id: "neurology", name: "Neurology" },
-  { id: "orthopedics", name: "Orthopedics" },
-  { id: "pediatrics", name: "Pediatrics" },
-  { id: "obstetrics", name: "Obstetrics & Gynecology" },
-  { id: "ophthalmology", name: "Ophthalmology" },
-  { id: "psychiatry", name: "Psychiatry" },
-  { id: "urology", name: "Urology" },
-  { id: "general", name: "General Medicine" },
+// Available specialties
+const specialties = [
+  "All Specialties",
+  "Cardiologist",
+  "Dermatologist",
+  "General Practitioner",
+  "Gynecologist",
+  "Neurologist",
+  "Ophthalmologist",
+  "Pediatrician",
+  "Psychiatrist",
+  "Urologist"
 ];
 
-// Languages commonly spoken in Morocco
-const LANGUAGES = [
-  { id: "arabic", name: "Arabic" },
-  { id: "french", name: "French" },
-  { id: "english", name: "English" },
-  { id: "spanish", name: "Spanish" },
-  { id: "amazigh", name: "Amazigh" },
-];
+// Available languages
+const languages = ["Arabic", "French", "English", "Amazigh", "Spanish"];
 
-// Insurance providers
-const INSURANCE = [
-  { id: "cnops", name: "CNOPS" },
-  { id: "cnss", name: "CNSS" },
-  { id: "private", name: "Private Insurance" },
-];
-
-// Calculate distance between two points in kilometers
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Radius of the earth in km
-  const dLat = deg2rad(lat2 - lat1);
-  const dLon = deg2rad(lon2 - lon1);
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2); 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-  const distance = R * c; // Distance in km
-  return Math.round(distance * 10) / 10;
-}
-
-function deg2rad(deg: number): number {
-  return deg * (Math.PI/180);
-}
+// Available insurances
+const insurances = ["CNOPS", "CNSS", "RMA", "Saham Assurance", "Wafa Assurance", "Axa Assurance", "MGEN"];
 
 const Doctors = () => {
   const { t, isRTL } = useTranslation();
-  const navigate = useNavigate();
   const { position, getPosition, error: geoError } = useGeolocation();
-  const { toast } = useToast();
   
-  // Search and filter states
+  // State for filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
+  const [specialty, setSpecialty] = useState("All Specialties");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-  const [selectedInsurance, setSelectedInsurance] = useState<string[]>([]);
-  const [searchRadius, setSearchRadius] = useState<number[]>([10]);
-  const [immediateOnly, setImmediateOnly] = useState(false);
-  const [distanceSortEnabled, setDistanceSortEnabled] = useState(false);
+  const [selectedInsurances, setSelectedInsurances] = useState<string[]>([]);
+  const [maxDistance, setMaxDistance] = useState(30); // in kilometers
+  const [showAvailableToday, setShowAvailableToday] = useState(false);
+  const [showAcceptingNew, setShowAcceptingNew] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   
-  // Get user location
-  const handleGetLocation = async () => {
-    try {
-      await getPosition();
-      toast({
-        title: t('doctors.locationFound'),
-        description: t('doctors.searchingNearby'),
-        variant: "success",
+  // State for doctors data
+  const [doctors, setDoctors] = useState(doctorsData);
+  const [filteredDoctors, setFilteredDoctors] = useState(doctorsData);
+  
+  // Set up fuse.js for fuzzy search
+  const fuseOptions = {
+    keys: ['name', 'specialty', 'location', 'languages', 'insurances'],
+    threshold: 0.3
+  };
+  const fuse = new Fuse(doctors, fuseOptions);
+  
+  // Calculate distances when position changes
+  useEffect(() => {
+    if (position) {
+      // Calculate distance for each doctor
+      const doctorsWithDistance = doctors.map(doctor => {
+        const distance = calculateDistance(
+          position.latitude,
+          position.longitude,
+          doctor.coordinates.lat,
+          doctor.coordinates.lng
+        );
+        return { ...doctor, distance };
       });
-      setDistanceSortEnabled(true);
-    } catch (error) {
-      toast({
-        title: t('doctors.locationError'),
-        description: String(error) || t('doctors.enableLocation'),
-        variant: "destructive",
-      });
+      
+      // Sort by distance
+      doctorsWithDistance.sort((a, b) => a.distance - b.distance);
+      
+      setDoctors(doctorsWithDistance);
     }
+  }, [position]);
+  
+  // Function to calculate distance between two coordinates (Haversine formula)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const distance = R * c; // Distance in km
+    return parseFloat(distance.toFixed(1));
   };
   
-  // Initialize Fuse.js for fuzzy search
-  const fuse = useMemo(() => 
-    new Fuse(DOCTORS_DATA, {
-      keys: [
-        'name', 
-        'specialty',
-        'subSpecialty',
-        'languages',
-        'address'
-      ],
-      threshold: 0.3,
-      includeScore: true
-    }), 
-    []
-  );
+  const deg2rad = (deg: number): number => {
+    return deg * (Math.PI/180);
+  };
   
-  // Filter and sort doctors
-  const filteredDoctors = useMemo(() => {
-    let results = [...DOCTORS_DATA];
+  // Request user location
+  const handleGetLocation = () => {
+    getPosition()
+      .then(() => {
+        toast({
+          title: "Location found",
+          description: "We've found your location and updated doctor distances.",
+          variant: "default",
+        });
+      })
+      .catch((err) => {
+        toast({
+          title: "Location error",
+          description: err.message,
+          variant: "destructive",
+        });
+      });
+  };
+  
+  // Filter doctors based on all criteria
+  useEffect(() => {
+    let results = [...doctors];
     
-    // Apply text search if query exists
-    if (searchQuery.trim()) {
+    // Apply search query if any
+    if (searchQuery) {
       const fuseResults = fuse.search(searchQuery);
       results = fuseResults.map(result => result.item);
     }
     
     // Apply specialty filter
-    if (selectedSpecialty) {
-      results = results.filter(doctor => 
-        doctor.specialty.toLowerCase().includes(selectedSpecialty.toLowerCase())
-      );
+    if (specialty !== "All Specialties") {
+      results = results.filter(doctor => doctor.specialty === specialty);
     }
     
     // Apply language filter
     if (selectedLanguages.length > 0) {
       results = results.filter(doctor => 
-        selectedLanguages.every(lang => 
-          doctor.languages.some(docLang => 
-            docLang.toLowerCase().includes(lang.toLowerCase())
-          )
-        )
+        selectedLanguages.every(lang => doctor.languages.includes(lang))
       );
     }
     
     // Apply insurance filter
-    if (selectedInsurance.length > 0) {
+    if (selectedInsurances.length > 0) {
       results = results.filter(doctor => 
-        selectedInsurance.every(ins => 
-          doctor.insurance.some(docIns => 
-            docIns.toLowerCase().includes(ins.toLowerCase())
-          )
-        )
+        selectedInsurances.some(ins => doctor.insurances.includes(ins))
       );
     }
     
-    // Apply immediate availability filter
-    if (immediateOnly) {
-      results = results.filter(doctor => doctor.immediate);
-    }
-    
-    // Apply distance filter and sorting if location is available
+    // Apply distance filter if location is available
     if (position) {
-      // Add distance to each doctor
-      results = results.map(doctor => ({
-        ...doctor,
-        distance: calculateDistance(
-          position.latitude, 
-          position.longitude, 
-          doctor.latitude, 
-          doctor.longitude
-        )
-      }));
-      
-      // Filter by radius
-      if (searchRadius[0] > 0) {
-        results = results.filter(doctor => 
-          (doctor as any).distance <= searchRadius[0]
-        );
-      }
-      
-      // Sort by distance if enabled
-      if (distanceSortEnabled) {
-        results.sort((a, b) => (a as any).distance - (b as any).distance);
-      }
+      results = results.filter(doctor => doctor.distance <= maxDistance);
     }
     
-    return results;
-  }, [
-    searchQuery, 
-    selectedSpecialty, 
-    selectedLanguages, 
-    selectedInsurance, 
-    immediateOnly, 
-    position, 
-    searchRadius, 
-    distanceSortEnabled,
-    fuse
-  ]);
-
-  // Handle language selection toggle
+    // Apply availability filters
+    if (showAvailableToday) {
+      results = results.filter(doctor => doctor.availableToday);
+    }
+    
+    if (showAcceptingNew) {
+      results = results.filter(doctor => doctor.acceptingNewPatients);
+    }
+    
+    setFilteredDoctors(results);
+  }, [searchQuery, specialty, selectedLanguages, selectedInsurances, maxDistance, showAvailableToday, showAcceptingNew, doctors, position]);
+  
+  // Toggle language selection
   const toggleLanguage = (language: string) => {
     setSelectedLanguages(prev => 
       prev.includes(language)
-        ? prev.filter(l => l !== language)
+        ? prev.filter(lang => lang !== language)
         : [...prev, language]
     );
   };
   
-  // Handle insurance selection toggle
+  // Toggle insurance selection
   const toggleInsurance = (insurance: string) => {
-    setSelectedInsurance(prev => 
+    setSelectedInsurances(prev => 
       prev.includes(insurance)
-        ? prev.filter(i => i !== insurance)
+        ? prev.filter(ins => ins !== insurance)
         : [...prev, insurance]
     );
   };
   
-  // Navigate to doctor profile
-  const handleViewDoctor = (doctorId: string) => {
-    navigate(`/doctors/${doctorId}`);
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSpecialty("All Specialties");
+    setSelectedLanguages([]);
+    setSelectedInsurances([]);
+    setMaxDistance(30);
+    setShowAvailableToday(false);
+    setShowAcceptingNew(false);
   };
   
-  // Book appointment with doctor
-  const handleBookAppointment = (doctorId: string) => {
-    navigate(`/appointments/book/${doctorId}`);
+  // Book an appointment with a doctor
+  const handleBookAppointment = (doctorId: number) => {
+    const doctor = doctors.find(d => d.id === doctorId);
+    
+    if (doctor) {
+      toast({
+        title: "Appointment Requested",
+        description: `We're scheduling your appointment with ${doctor.name}.`,
+        variant: "default",
+      });
+    }
   };
-
+  
+  // Call a doctor
+  const handleCallDoctor = (doctorId: number) => {
+    const doctor = doctors.find(d => d.id === doctorId);
+    
+    if (doctor) {
+      // In a real app, this would initiate a call
+      console.log(`Calling ${doctor.name}...`);
+      toast({
+        title: "Initiating Call",
+        description: `Connecting to ${doctor.name}...`,
+        variant: "default",
+      });
+    }
+  };
+  
   return (
-    <div className="min-h-screen bg-medical-light">
+    <div className={`min-h-screen bg-gray-50 ${isRTL ? 'rtl' : 'ltr'}`}>
       <NavBar />
-      <main className="container px-4 py-8 mx-auto">
+      
+      <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6 text-center text-medical-blue">
           {t('doctors.findDoctor')}
         </h1>
         
-        {/* Search Bar */}
-        <div className="relative mb-8 max-w-2xl mx-auto">
-          <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400`} size={20} />
-          <Input
-            type="text"
-            placeholder={t('doctors.searchPlaceholder')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`pl-10 pr-4 py-2 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
-            dir={isRTL ? 'rtl' : 'ltr'}
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
-          <Card className="md:col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl flex items-center">
-                <Filter className="mr-2 h-5 w-5" />
-                {t('general.filters')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Location Filter */}
-              <div className="space-y-3">
-                <h3 className="font-medium">{t('doctors.location')}</h3>
-                <Button
-                  variant="outline"
+        {/* Search and filter section */}
+        <Card className="mb-8">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder={t('doctors.searchPlaceholder')}
+                  className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex-shrink-0">
+                <Button 
                   onClick={handleGetLocation}
-                  className="w-full justify-between"
+                  className="w-full md:w-auto"
+                  variant="outline"
                 >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {position 
-                    ? t('doctors.updateLocation')
-                    : t('doctors.useMyLocation')
-                  }
+                  <MapPin className="mr-2 h-4 w-4" />
+                  {t('doctors.useLocation')}
                 </Button>
-                
-                {position && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>{t('doctors.searchRadius')}</span>
-                      <span>{searchRadius[0]} km</span>
-                    </div>
-                    <Slider
-                      min={1}
-                      max={50}
-                      step={1}
-                      value={searchRadius}
-                      onValueChange={setSearchRadius}
-                    />
+              </div>
+            </div>
+            
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="basic">{t('doctors.basicFilters')}</TabsTrigger>
+                <TabsTrigger value="advanced">{t('doctors.advancedFilters')}</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="basic">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <Label>{t('doctors.specialty')}</Label>
+                    <Select 
+                      value={specialty} 
+                      onValueChange={setSpecialty}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('doctors.selectSpecialty')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {specialties.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </div>
-              
-              {/* Specialty Filter */}
-              <div className="space-y-3">
-                <h3 className="font-medium">{t('doctors.specialty')}</h3>
-                <Select
-                  value={selectedSpecialty}
-                  onValueChange={setSelectedSpecialty}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('doctors.selectSpecialty')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">{t('general.all')}</SelectItem>
-                    {SPECIALTIES.map((specialty) => (
-                      <SelectItem key={specialty.id} value={specialty.id}>
-                        {specialty.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {/* Language Filter */}
-              <div className="space-y-3">
-                <h3 className="font-medium">{t('doctors.languages')}</h3>
-                <div className="space-y-2">
-                  {LANGUAGES.map((language) => (
-                    <div key={language.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`language-${language.id}`}
-                        checked={selectedLanguages.includes(language.id)}
-                        onCheckedChange={() => toggleLanguage(language.id)}
+                  
+                  <div>
+                    <Label>{t('doctors.maxDistance')}</Label>
+                    <div className="flex items-center mt-2">
+                      <Slider
+                        value={[maxDistance]}
+                        min={1}
+                        max={100}
+                        step={1}
+                        onValueChange={(vals) => setMaxDistance(vals[0])}
+                        disabled={!position}
+                        className="flex-1 mr-4"
                       />
-                      <Label htmlFor={`language-${language.id}`}>{language.name}</Label>
+                      <span className="w-16 text-right">{maxDistance} km</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Insurance Filter */}
-              <div className="space-y-3">
-                <h3 className="font-medium">{t('doctors.insurance')}</h3>
-                <div className="space-y-2">
-                  {INSURANCE.map((insurance) => (
-                    <div key={insurance.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`insurance-${insurance.id}`}
-                        checked={selectedInsurance.includes(insurance.id)}
-                        onCheckedChange={() => toggleInsurance(insurance.id)}
-                      />
-                      <Label htmlFor={`insurance-${insurance.id}`}>{insurance.name}</Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Availability Filter */}
-              <div className="space-y-3">
-                <h3 className="font-medium">{t('doctors.availability')}</h3>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="immediate"
-                    checked={immediateOnly}
-                    onCheckedChange={(checked) => setImmediateOnly(!!checked)}
-                  />
-                  <Label htmlFor="immediate">{t('doctors.immediateAvailability')}</Label>
-                </div>
-              </div>
-              
-              {/* Reset Filters */}
-              <Button
-                variant="outline"
-                className="w-full mt-4"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedSpecialty("");
-                  setSelectedLanguages([]);
-                  setSelectedInsurance([]);
-                  setSearchRadius([10]);
-                  setImmediateOnly(false);
-                  setDistanceSortEnabled(false);
-                }}
-              >
-                {t('general.resetFilters')}
-              </Button>
-            </CardContent>
-          </Card>
-          
-          {/* Results */}
-          <div className="md:col-span-3 space-y-4">
-            <Tabs defaultValue="list">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">
-                  {filteredDoctors.length > 0 
-                    ? t('doctors.foundDoctorsCount', { count: filteredDoctors.length })
-                    : t('doctors.noDoctorsFound')
-                  }
-                </h2>
-                <TabsList>
-                  <TabsTrigger value="list">{t('general.list')}</TabsTrigger>
-                  <TabsTrigger value="map">{t('general.map')}</TabsTrigger>
-                </TabsList>
-              </div>
-              
-              <TabsContent value="list" className="space-y-4">
-                {filteredDoctors.map((doctor) => (
-                  <Card key={doctor.id} className="overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="flex flex-col md:flex-row">
-                        {/* Doctor Image */}
-                        <div className="md:w-1/4 p-4 flex justify-center items-start">
-                          <div className="relative">
-                            <img 
-                              src={doctor.image} 
-                              alt={doctor.name}
-                              className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md" 
-                            />
-                            {doctor.immediate && (
-                              <Badge className="absolute bottom-0 right-0 bg-green-500">
-                                {t('doctors.availableNow')}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Doctor Info */}
-                        <div className="md:w-2/4 p-4">
-                          <h3 className="text-xl font-bold mb-1">{doctor.name}</h3>
-                          <p className="text-gray-600 mb-2">{doctor.specialty}</p>
-                          
-                          <div className="flex items-center mb-2">
-                            <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                            <span className="font-medium">{doctor.rating}</span>
-                            <span className="text-gray-500 text-sm ml-1">
-                              ({doctor.reviewCount} {t('general.reviews')})
-                            </span>
-                            
-                            {(doctor as any).distance && (
-                              <span className="ml-3 text-sm flex items-center text-gray-500">
-                                <MapPin className="h-3 w-3 mr-1" />
-                                {(doctor as any).distance} km
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-1 text-sm text-gray-600">
-                            <div className="flex items-start">
-                              <Globe className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                              <span>{doctor.languages.join(", ")}</span>
-                            </div>
-                            <div className="flex items-start">
-                              <CreditCard className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                              <span>{doctor.insurance.join(", ")}</span>
-                            </div>
-                            <div className="flex items-start">
-                              <MapPin className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                              <span>{doctor.address}</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Action Buttons */}
-                        <div className="md:w-1/4 bg-gray-50 p-4 flex flex-col justify-between">
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm text-gray-500">{t('doctors.consultation')}</span>
-                              <span className="font-bold text-medical-blue">{doctor.price} MAD</span>
-                            </div>
-                            <div className="flex items-center justify-between mb-4">
-                              <span className="text-sm text-gray-500">{t('doctors.waitTime')}</span>
-                              <span className="text-sm">{doctor.waitTime}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Button
-                              onClick={() => handleViewDoctor(doctor.id)}
-                              variant="outline"
-                              className="w-full"
-                            >
-                              <User className="h-4 w-4 mr-2" />
-                              {t('doctors.viewProfile')}
-                            </Button>
-                            <Button
-                              onClick={() => handleBookAppointment(doctor.id)}
-                              className="w-full bg-medical-blue hover:bg-medical-blue/90"
-                            >
-                              <Calendar className="h-4 w-4 mr-2" />
-                              {t('doctors.bookAppointment')}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                
-                {filteredDoctors.length === 0 && (
-                  <div className="text-center py-20">
-                    <User className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-xl font-medium text-gray-700 mb-2">
-                      {t('doctors.noDoctorsFound')}
-                    </h3>
-                    <p className="text-gray-500 max-w-md mx-auto">
-                      {t('doctors.tryAdjustingFilters')}
-                    </p>
                   </div>
-                )}
+                  
+                  <div className="flex flex-col justify-end">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Switch
+                        id="available-today"
+                        checked={showAvailableToday}
+                        onCheckedChange={setShowAvailableToday}
+                      />
+                      <Label htmlFor="available-today">{t('doctors.availableToday')}</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="accepting-new"
+                        checked={showAcceptingNew}
+                        onCheckedChange={setShowAcceptingNew}
+                      />
+                      <Label htmlFor="accepting-new">{t('doctors.acceptingNewPatients')}</Label>
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
               
-              <TabsContent value="map">
-                <Card className="overflow-hidden">
-                  <div className="h-[500px]">
-                    <LocationMap />
+              <TabsContent value="advanced">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                  <div>
+                    <Label className="mb-2 block">{t('doctors.languages')}</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {languages.map((language) => (
+                        <Badge
+                          key={language}
+                          variant={selectedLanguages.includes(language) ? "default" : "outline"}
+                          className="cursor-pointer"
+                          onClick={() => toggleLanguage(language)}
+                        >
+                          {language}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </Card>
+                  
+                  <div>
+                    <Label className="mb-2 block">{t('doctors.insurances')}</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {insurances.map((insurance) => (
+                        <Badge
+                          key={insurance}
+                          variant={selectedInsurances.includes(insurance) ? "default" : "outline"}
+                          className="cursor-pointer"
+                          onClick={() => toggleInsurance(insurance)}
+                        >
+                          {insurance}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
-          </div>
+            
+            <div className="flex justify-between items-center mt-4">
+              <Button 
+                variant="outline" 
+                onClick={resetFilters}
+              >
+                {t('doctors.resetFilters')}
+              </Button>
+              
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                >
+                  {t('doctors.listView')}
+                </Button>
+                <Button
+                  variant={viewMode === "map" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("map")}
+                >
+                  {t('doctors.mapView')}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Results section */}
+        <div className="mb-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold">
+            {filteredDoctors.length} {t('doctors.resultsFound')}
+          </h2>
+          
+          {position && (
+            <div className="text-sm text-gray-500">
+              <MapPin className="inline-block h-4 w-4 mr-1" />
+              {t('doctors.sortedByDistance')}
+            </div>
+          )}
         </div>
+        
+        {/* View modes */}
+        {viewMode === "list" ? (
+          <div className="space-y-4">
+            {filteredDoctors.length > 0 ? (
+              filteredDoctors.map((doctor) => (
+                <Card key={doctor.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row md:items-start gap-4">
+                      <div className="md:w-1/4 flex flex-col items-center">
+                        <Avatar className="h-24 w-24 mb-2">
+                          <img src={doctor.avatar} alt={doctor.name} />
+                        </Avatar>
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                          <span className="font-medium">{doctor.rating}</span>
+                          <span className="text-sm text-gray-500 ml-1">({doctor.reviewCount})</span>
+                        </div>
+                        {doctor.availableToday && (
+                          <Badge className="mt-2 bg-green-500">
+                            {t('doctors.availableToday')}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="md:w-2/4">
+                        <h3 className="text-lg font-semibold">{doctor.name}</h3>
+                        <p className="text-gray-600">{doctor.specialty}</p>
+                        
+                        <div className="mt-2 flex items-start gap-1">
+                          <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
+                          <div>
+                            <p className="text-sm">{doctor.address}</p>
+                            {position && (
+                              <p className="text-sm text-gray-500">
+                                {doctor.distance} km {t('doctors.fromYou')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {doctor.languages.map((lang) => (
+                            <Badge key={lang} variant="outline" className="text-xs">
+                              {lang}
+                            </Badge>
+                          ))}
+                        </div>
+                        
+                        <div className="mt-2">
+                          <p className="text-sm">
+                            <span className="font-medium">{t('doctors.education')}:</span> {doctor.education}
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium">{t('doctors.experience')}:</span> {doctor.experience}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="md:w-1/4 flex flex-col gap-2">
+                        <Button 
+                          className="w-full bg-medical-blue hover:bg-medical-blue/90"
+                          onClick={() => handleBookAppointment(doctor.id)}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {t('doctors.bookAppointment')}
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => handleCallDoctor(doctor.id)}
+                        >
+                          <Phone className="mr-2 h-4 w-4" />
+                          {t('doctors.callDoctor')}
+                        </Button>
+                        
+                        <Button variant="outline" className="w-full">
+                          <Video className="mr-2 h-4 w-4" />
+                          {t('doctors.videoConsult')}
+                        </Button>
+                        
+                        {doctor.availableToday && (
+                          <div className="mt-2">
+                            <p className="text-sm font-medium text-green-600">{t('doctors.todaySlots')}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {doctor.availableSlots[0].slots.map((slot) => (
+                                <Badge
+                                  key={slot}
+                                  variant="outline"
+                                  className="cursor-pointer hover:bg-green-50"
+                                >
+                                  {slot}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900">{t('doctors.noResults')}</h3>
+                <p className="text-gray-500 mt-1">{t('doctors.tryDifferentFilters')}</p>
+                <Button onClick={resetFilters} className="mt-4">
+                  {t('doctors.resetFilters')}
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="h-[600px] rounded-lg overflow-hidden">
+            <LocationMap />
+            <div className="mt-2 text-center text-sm text-gray-500">
+              {t('doctors.mapViewDescription')}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
