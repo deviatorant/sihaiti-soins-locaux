@@ -13,6 +13,8 @@ type AuthUser = {
   phone?: string;
   firstName?: string;
   lastName?: string;
+  name?: string;
+  avatar_url?: string;
   isGuest: boolean;
   patientID: string;
   token?: string;

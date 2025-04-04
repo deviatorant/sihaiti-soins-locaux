@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 
 // Define the Doctor interface
@@ -111,7 +110,7 @@ const mockDoctors: Doctor[] = [
     id: '2',
     name: 'Dr. Mohammed Al-Fasi',
     specialty: 'Pediatrics',
-    bio: 'Caring pediatrician dedicated to children's health and development.',
+    bio: 'Caring pediatrician dedicated to children\'s health and development.',
     education: ['Rabat Medical University', 'Children\'s Hospital Fellowship'],
     experience: 10,
     languages: ['Arabic', 'French'],
@@ -230,4 +229,3 @@ export const addDoctor = async (doctor: Omit<Doctor, 'id'>) => {
     return null;
   }
 };
-

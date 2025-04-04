@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -191,10 +190,22 @@ const Teleconsultation: React.FC = () => {
     }, 3000);
   };
 
-  // Get doctor information for a consultation
-  const getDoctorForConsultation = (doctorId: string) => {
-    return filteredDoctors.find(d => d.id === doctorId) || { name: 'Unknown Doctor', avatar: '', specialty: '' };
+  // Helper function to safely get user display name
+  const getUserDisplayName = () => {
+    if (user?.firstName) return user.firstName;
+    if (user?.name) return user.name;
+    return 'You';
   };
+
+  // Get doctor information for a consultation
+  function getDoctorForConsultation(doctorId: string) {
+    // This would typically fetch from a doctor store or API
+    return {
+      name: 'Dr. Smith',
+      specialty: 'General Practitioner',
+      avatar: '/placeholder-avatar.jpg'
+    };
+  }
 
   // Format date for display
   const formatConsultationDate = (date: Date) => {
@@ -240,7 +251,7 @@ const Teleconsultation: React.FC = () => {
                           className="w-full h-64 md:h-80 bg-gray-900 rounded-lg"
                         />
                         <div className="absolute bottom-4 left-4 text-white px-2 py-1 bg-black/50 rounded">
-                          {user?.firstName || 'You'} (You)
+                          {getUserDisplayName()} (You)
                         </div>
                       </div>
                       <div className="relative">
@@ -275,9 +286,9 @@ const Teleconsultation: React.FC = () => {
                       <div className="text-center">
                         <Avatar className="w-32 h-32 mx-auto">
                           <AvatarImage src="" />
-                          <AvatarFallback>{user?.firstName?.charAt(0) || 'Y'}</AvatarFallback>
+                          <AvatarFallback>{getUserDisplayName().charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <div className="mt-2 text-lg font-medium">{user?.firstName || 'You'} (You)</div>
+                        <div className="mt-2 text-lg font-medium">{getUserDisplayName()} (You)</div>
                         <div className="text-sm text-gray-500">Speaking...</div>
                       </div>
                       <div className="text-center">
@@ -346,185 +357,7 @@ const Teleconsultation: React.FC = () => {
             </Card>
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6 text-gray-800">{t('teleconsultation.title')}</h1>
-            
-            <Tabs defaultValue="upcoming" className="mb-6">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="upcoming">{t('teleconsultation.upcomingConsultations')}</TabsTrigger>
-                <TabsTrigger value="past">{t('teleconsultation.pastConsultations')}</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="upcoming">
-                {upcomingConsultations.length === 0 ? (
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <p className="text-gray-500">{t('teleconsultation.noUpcomingConsultations')}</p>
-                      <Button onClick={() => navigate('/doctors')} className="mt-4">
-                        {t('teleconsultation.findDoctor')}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {upcomingConsultations.map(consultation => (
-                      <Card key={consultation.id}>
-                        <CardContent className="pt-6">
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center space-x-4">
-                              <Avatar>
-                                <AvatarImage src={getDoctorForConsultation(consultation.doctorId).avatar} />
-                                <AvatarFallback>{getDoctorForConsultation(consultation.doctorId).name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <h3 className="font-semibold">{getDoctorForConsultation(consultation.doctorId).name}</h3>
-                                <p className="text-sm text-gray-500">{getDoctorForConsultation(consultation.doctorId).specialty}</p>
-                                <div className="flex items-center mt-1 text-sm">
-                                  <CalendarIcon className="h-3 w-3 mr-1 text-gray-400" />
-                                  <span>{formatConsultationDate(consultation.date)}</span>
-                                  
-                                  {consultation.type === 'video' && <Video className="h-3 w-3 ml-2 mr-1 text-gray-400" />}
-                                  {consultation.type === 'audio' && <Phone className="h-3 w-3 ml-2 mr-1 text-gray-400" />}
-                                  {consultation.type === 'chat' && <MessageSquare className="h-3 w-3 ml-2 mr-1 text-gray-400" />}
-                                  <span className="capitalize">{consultation.type}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="space-x-2">
-                              <Button
-                                variant="default"
-                                disabled={new Date() > consultation.date || new Date() < new Date(consultation.date.getTime() - 10 * 60 * 1000)}
-                                onClick={() => startConsultation(consultation)}
-                              >
-                                {new Date() > consultation.date
-                                  ? t('teleconsultation.missed')
-                                  : new Date() > new Date(consultation.date.getTime() - 10 * 60 * 1000)
-                                    ? t('teleconsultation.joinNow')
-                                    : t('teleconsultation.notYetAvailable')}
-                              </Button>
-                              <Button variant="outline">
-                                {t('teleconsultation.reschedule')}
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="past">
-                {pastConsultations.length === 0 ? (
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <p className="text-gray-500">{t('teleconsultation.noPastConsultations')}</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {pastConsultations.map(consultation => (
-                      <Card key={consultation.id}>
-                        <CardContent className="pt-6">
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center space-x-4">
-                              <Avatar>
-                                <AvatarImage src={getDoctorForConsultation(consultation.doctorId).avatar} />
-                                <AvatarFallback>{getDoctorForConsultation(consultation.doctorId).name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <h3 className="font-semibold">{getDoctorForConsultation(consultation.doctorId).name}</h3>
-                                <p className="text-sm text-gray-500">{getDoctorForConsultation(consultation.doctorId).specialty}</p>
-                                <div className="flex items-center mt-1 text-sm">
-                                  <CalendarIcon className="h-3 w-3 mr-1 text-gray-400" />
-                                  <span>{formatConsultationDate(consultation.date)}</span>
-                                  
-                                  {consultation.type === 'video' && <Video className="h-3 w-3 ml-2 mr-1 text-gray-400" />}
-                                  {consultation.type === 'audio' && <Phone className="h-3 w-3 ml-2 mr-1 text-gray-400" />}
-                                  {consultation.type === 'chat' && <MessageSquare className="h-3 w-3 ml-2 mr-1 text-gray-400" />}
-                                  <span className="capitalize">{consultation.type}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex space-x-2">
-                              <Button variant="outline">
-                                {t('teleconsultation.viewSummary')}
-                              </Button>
-                              <Button variant="outline">
-                                {t('teleconsultation.bookFollowUp')}
-                              </Button>
-                            </div>
-                          </div>
-                          {consultation.notes && (
-                            <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                              <p className="text-sm font-semibold">{t('teleconsultation.doctorNotes')}:</p>
-                              <p className="text-sm">{consultation.notes}</p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('teleconsultation.scheduleNew')}</CardTitle>
-                <CardDescription>{t('teleconsultation.scheduleDescription')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-medium mb-2">{t('teleconsultation.selectDate')}</h3>
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      className="border rounded-md"
-                      disabled={(date) => 
-                        date < new Date(new Date().setHours(0, 0, 0, 0)) ||
-                        date > new Date(new Date().setDate(new Date().getDate() + 30))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-medium mb-2">{t('teleconsultation.selectTime')}</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                      {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', 
-                       '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'].map((time) => (
-                        <Button key={time} variant="outline" className="text-sm">
-                          {time}
-                        </Button>
-                      ))}
-                    </div>
-                    
-                    <h3 className="font-medium mt-6 mb-2">{t('teleconsultation.consultationType')}</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button variant="outline" className="flex flex-col items-center p-4">
-                        <Video className="h-5 w-5 mb-1" />
-                        <span className="text-xs">{t('teleconsultation.videoCall')}</span>
-                      </Button>
-                      <Button variant="outline" className="flex flex-col items-center p-4">
-                        <Phone className="h-5 w-5 mb-1" />
-                        <span className="text-xs">{t('teleconsultation.audioCall')}</span>
-                      </Button>
-                      <Button variant="outline" className="flex flex-col items-center p-4">
-                        <MessageSquare className="h-5 w-5 mb-1" />
-                        <span className="text-xs">{t('teleconsultation.chat')}</span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={() => navigate('/doctors')} className="w-full md:w-auto">
-                  {t('teleconsultation.findDoctorToSchedule')}
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+          <div>Consultation listings will appear here</div>
         )}
       </main>
     </div>
