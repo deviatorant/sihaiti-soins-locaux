@@ -15,10 +15,40 @@ export const isAuthenticated = async () => {
   return !!data.session;
 };
 
+// Debug utility to log the OAuth state
+export const debugOAuthStatus = async () => {
+  try {
+    // Get current session info
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      return { error: sessionError };
+    }
+    
+    // Try to get OAuth settings info
+    const { data: configData, error: configError } = await supabase.rpc('get_oauth_settings', {});
+    
+    console.log('Session data:', sessionData);
+    
+    if (configError) {
+      console.warn('Config error (this is normal if you don\'t have the get_oauth_settings RPC):', configError);
+    } else {
+      console.log('OAuth config:', configData);
+    }
+    
+    return { session: sessionData, config: configData };
+  } catch (error) {
+    console.error('Debug OAuth error:', error);
+    return { error };
+  }
+};
+
 // Auth functions
 export const auth = {
   // Sign up with email and password
   signUp: async (email: string, password: string, metadata?: any) => {
+    console.log('Signing up with email:', email, 'metadata:', metadata);
     return supabase.auth.signUp({
       email,
       password,
@@ -30,6 +60,7 @@ export const auth = {
 
   // Sign in with email and password
   signIn: async (email: string, password: string) => {
+    console.log('Signing in with email:', email);
     return supabase.auth.signInWithPassword({
       email,
       password,
@@ -38,6 +69,7 @@ export const auth = {
 
   // Sign in with OTP (One-Time Password)
   signInWithOtp: async (phone: string) => {
+    console.log('Signing in with OTP, phone:', phone);
     return supabase.auth.signInWithOtp({
       phone,
     });
@@ -45,6 +77,7 @@ export const auth = {
 
   // Verify OTP
   verifyOtp: async (phone: string, token: string) => {
+    console.log('Verifying OTP, phone:', phone, 'token:', token);
     return supabase.auth.verifyOtp({
       phone,
       token,
@@ -54,16 +87,33 @@ export const auth = {
 
   // Sign in with OAuth provider (Google, Facebook, etc.)
   signInWithProvider: async (provider: 'google' | 'facebook') => {
-    return supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    console.log('Signing in with provider:', provider);
+    
+    // Add debugging to see what's happening
+    try {
+      const result = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      
+      console.log(`${provider} auth result:`, result);
+      
+      if (result.error) {
+        console.error(`${provider} auth error:`, result.error);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error(`${provider} auth exception:`, error);
+      throw error;
+    }
   },
 
   // Sign out
   signOut: async () => {
+    console.log('Signing out');
     return supabase.auth.signOut();
   },
 
@@ -74,6 +124,7 @@ export const auth = {
 
   // Reset password
   resetPassword: async (email: string) => {
+    console.log('Resetting password for email:', email);
     return supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });

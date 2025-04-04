@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/hooks/useAuth";
 import NavBar from "@/components/NavBar";
@@ -11,12 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "@/hooks/use-toast";
-import { Facebook, Mail, Phone, Smartphone, User, AlertTriangle } from "lucide-react";
+import { Facebook, Mail, Phone, Smartphone, User, AlertTriangle, Info } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login = () => {
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, loginWithPhone, loginWithGoogle, loginWithFacebook, continueAsGuest, sendOTP } = useAuth();
   
   const [email, setEmail] = useState("");
@@ -26,6 +27,20 @@ const Login = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [phoneAuthError, setPhoneAuthError] = useState<string | null>(null);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+  
+  // Check for OAuth errors in URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+    
+    if (error) {
+      const errorMessage = errorDescription || `Authentication error: ${error}`;
+      setOauthError(errorMessage);
+      console.error('OAuth error from URL:', error, errorDescription);
+    }
+  }, [location]);
   
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,10 +79,12 @@ const Login = () => {
         setIsOtpSent(true);
       } catch (error: any) {
         console.error('Phone auth error:', error);
-        if (error?.message?.includes('Unsupported provider') || error?.error_description?.includes('not enabled')) {
-          setPhoneAuthError("Phone authentication is not enabled. Please use email or social login instead.");
+        if (error?.message?.includes('Unsupported provider') || 
+            error?.message?.includes('not enabled') || 
+            error?.error_description?.includes('not enabled')) {
+          setPhoneAuthError("L'authentification par téléphone n'est pas activée. Veuillez utiliser l'email ou les réseaux sociaux.");
         } else {
-          setPhoneAuthError(error?.message || "Failed to send OTP. Please try another login method.");
+          setPhoneAuthError(error?.message || "Échec de l'envoi du code OTP. Veuillez essayer une autre méthode de connexion.");
         }
       } finally {
         setIsLoading(false);
@@ -79,7 +96,7 @@ const Login = () => {
         navigate("/");
       } catch (error: any) {
         console.error('OTP verification error:', error);
-        setPhoneAuthError(error?.message || "Failed to verify OTP. Please try again or use another login method.");
+        setPhoneAuthError(error?.message || "Échec de la vérification du code OTP. Veuillez réessayer ou utiliser une autre méthode de connexion.");
       } finally {
         setIsLoading(false);
       }
@@ -93,29 +110,42 @@ const Login = () => {
   };
   
   const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setOauthError(null);
     try {
       await loginWithGoogle();
       // Redirect happens in the OAuth flow
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      setOauthError(error?.message || "Échec de la connexion avec Google. Veuillez réessayer ou utiliser une autre méthode.");
+    } finally {
+      setIsLoading(false);
     }
   };
   
   const handleFacebookLogin = async () => {
+    setIsLoading(true);
+    setOauthError(null);
     try {
       await loginWithFacebook();
       // Redirect happens in the OAuth flow
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error('Facebook login error:', error);
+      setOauthError(error?.message || "Échec de la connexion avec Facebook. Veuillez réessayer ou utiliser une autre méthode.");
+    } finally {
+      setIsLoading(false);
     }
   };
   
   const handleGuestLogin = async () => {
+    setIsLoading(true);
     try {
       await continueAsGuest();
       navigate("/");
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -132,6 +162,24 @@ const Login = () => {
             </CardHeader>
             
             <CardContent>
+              {oauthError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Erreur d'authentification</AlertTitle>
+                  <AlertDescription>{oauthError}</AlertDescription>
+                </Alert>
+              )}
+              
+              <Alert variant="default" className="mb-4 bg-amber-50 border-amber-200">
+                <Info className="h-4 w-4 text-amber-500" />
+                <AlertTitle>Configuration Supabase requise</AlertTitle>
+                <AlertDescription className="text-sm">
+                  Pour que l'authentification Google et téléphone fonctionne, vous devez configurer 
+                  ces fournisseurs dans votre projet Supabase. Allez dans Authentication &gt; Providers 
+                  et activez Google et Phone.
+                </AlertDescription>
+              </Alert>
+              
               <Tabs defaultValue="email" className="w-full">
                 <TabsList className="grid grid-cols-2 mb-4">
                   <TabsTrigger value="email">
@@ -187,7 +235,7 @@ const Login = () => {
                     {phoneAuthError && (
                       <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>Authentication Error</AlertTitle>
+                        <AlertTitle>Erreur d'authentification</AlertTitle>
                         <AlertDescription>{phoneAuthError}</AlertDescription>
                       </Alert>
                     )}
