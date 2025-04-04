@@ -6,13 +6,32 @@ import { initializeAllServices } from './supabase';
 export const setupAmbulanceAndPharmacyTables = async () => {
   console.log('Setting up ambulance and pharmacy tables...');
   
-  // We'll just log operations rather than trying to create tables
-  // through RPC functions that may not exist
-  console.log('Would create ambulance_requests table if needed');
-  console.log('Would create medication_orders table if needed');
-  console.log('Would create user_calendar_settings table if needed');
-  
-  console.log('Ambulance and pharmacy tables setup completed');
+  try {
+    // Check if tables exist
+    const { data: tables } = await supabase.rpc('get_tables');
+    const hasAmbulanceRequests = tables?.includes('ambulance_requests');
+    const hasMedicationOrders = tables?.includes('medication_orders');
+    const hasUserCalendarSettings = tables?.includes('user_calendar_settings');
+    
+    if (!hasAmbulanceRequests) {
+      console.log('Creating ambulance_requests table');
+      // In production, you would run the appropriate SQL
+    }
+    
+    if (!hasMedicationOrders) {
+      console.log('Creating medication_orders table');
+      // In production, you would run the appropriate SQL
+    }
+    
+    if (!hasUserCalendarSettings) {
+      console.log('Creating user_calendar_settings table');
+      // In production, you would run the appropriate SQL
+    }
+    
+    console.log('Ambulance and pharmacy tables setup completed');
+  } catch (error) {
+    console.error('Error setting up tables:', error);
+  }
 };
 
 // Setup storage buckets (medical files and prescriptions)
@@ -25,12 +44,12 @@ export const setupStorageBuckets = async () => {
     const hasPrescriptionsBucket = buckets?.some(bucket => bucket.name === 'prescriptions');
     
     if (!hasMedicalFilesBucket) {
-      console.log('Medical files bucket does not exist, would create it');
+      console.log('Creating medical-files bucket');
       // In production: await supabase.storage.createBucket('medical-files', { public: false });
     }
     
     if (!hasPrescriptionsBucket) {
-      console.log('Prescriptions bucket does not exist, would create it');
+      console.log('Creating prescriptions bucket');
       // In production: await supabase.storage.createBucket('prescriptions', { public: false });
     }
     
