@@ -24,6 +24,7 @@ export interface Doctor {
   insurances: string[];
   coordinates: [number, number];
   availableSlots?: string[];
+  location?: string;
 }
 
 // Fetch all doctors

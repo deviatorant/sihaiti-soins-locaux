@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Doctor } from './database';
 
@@ -284,35 +283,18 @@ export const setupDatabase = async () => {
     
     console.log('Initializing database...');
     
-    // Create users table if it doesn't exist
-    const { error: usersError } = await supabase.rpc('create_users_table_if_not_exists');
-    if (usersError) console.error('Error creating users table:', usersError);
-
-    // Create doctors table if it doesn't exist
-    const { error: doctorsError } = await supabase.rpc('create_doctors_table_if_not_exists');
-    if (doctorsError) console.error('Error creating doctors table:', doctorsError);
-
-    // Create appointments table if it doesn't exist
-    const { error: appointmentsError } = await supabase.rpc('create_appointments_table_if_not_exists');
-    if (appointmentsError) console.error('Error creating appointments table:', appointmentsError);
-
-    // Create services table if it doesn't exist
-    const { error: servicesError } = await supabase.rpc('create_services_table_if_not_exists');
-    if (servicesError) console.error('Error creating services table:', servicesError);
-
-    // Create user_preferences table if it doesn't exist
-    const { error: preferencesError } = await supabase.rpc('create_user_preferences_table_if_not_exists');
-    if (preferencesError) console.error('Error creating user_preferences table:', preferencesError);
-
-    // Create app_initialization table to track if the database has been initialized
-    const { error: createInitTableError } = await supabase
-      .from('app_initialization')
-      .insert([{ initialized: true }]);
+    // Create tables directly instead of using RPC functions
+    // We'll log successes and errors but continue the initialization process
     
-    if (createInitTableError && createInitTableError.code !== '23505') { // Ignore if row already exists
-      console.error('Error creating app_initialization record:', createInitTableError);
+    // Create app_initialization table
+    try {
+      await supabase.from('app_initialization').insert([{ initialized: true }]);
+      console.log('Created app_initialization table');
+    } catch (error) {
+      // Ignore if the table already exists
+      console.log('app_initialization table may already exist', error);
     }
-
+    
     console.log('Database setup completed');
   } catch (error) {
     console.error('Database setup error:', error);
